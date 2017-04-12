@@ -19,11 +19,25 @@ public:
     virtual void configure() = 0;
 
     //returns string representation of the json configuration
+    // we don't need to use this.
     virtual std::string getConfiguration() = 0;
 
     //returns json configuration
+    // This should be a json formatted like this:
+    // {
+    //    "name": "widget name",
+    //    "configuration": {configuration options here}
+    //  }
     virtual nlohmann::json getConfigurationJson() = 0;
 
+    //returns json configuration
+    // this will switch to"
+    // virtual nlohmann::json  refreshData() = 0
+    // this should return json in the format:
+    //     {  
+    //        "name": "name of widget"
+    //        "data": {json data we want from api}
+    //      }
     virtual std::string refreshData() = 0;
 
     time_t getLastRefreshed(){
