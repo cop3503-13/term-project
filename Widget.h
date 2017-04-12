@@ -54,6 +54,7 @@ public:
             setLastRefreshed(time(0));
             return refreshData();
         }
+        return "";
     }
 };
 
