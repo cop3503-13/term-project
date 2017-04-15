@@ -4,7 +4,7 @@
 
 #include <vector>
 #include <string>
-#include "Widget.h"
+#include "widgets/Widget.h"
 #include <iostream>
 #include <stdio.h>
 #include <sys/select.h>
@@ -15,7 +15,7 @@
 
 class Mirror {
 public:
-    std::vector<Widget> selectedWidgets;
+    std::vector<Widget*> selectedWidgets;
 
     Mirror();
     Mirror(std::string configFilename);

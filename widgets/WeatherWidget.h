@@ -4,7 +4,7 @@
 
 #include <string>
 #include "Widget.h"
-#include "include/json.hpp"
+#include "../include/json.hpp"
 
 class WeatherWidget : public Widget {
 public:
@@ -15,7 +15,7 @@ public:
     void configure();
     std::string getConfiguration();
     nlohmann::json getConfigurationJson();
-    std::string refreshData();
+    nlohmann::json refreshData();
 
 private:
     std::string zipcode;

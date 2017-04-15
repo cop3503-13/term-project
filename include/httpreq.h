@@ -5,7 +5,7 @@
 #include <string>
 #include <cstring>
 #include <time.h>
-#include "include/curl/curl.h"
+#include "curl/curl.h"
 
 class HTTPReq
 {

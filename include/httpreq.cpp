@@ -1,5 +1,5 @@
 #include "httpreq.h"
-#include "include/curl/curl.h"
+#include "curl/curl.h"
 
 /* TODO:
     Don't construct object if curl null (exception)

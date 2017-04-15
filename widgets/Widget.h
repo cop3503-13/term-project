@@ -5,22 +5,18 @@
 
 #include <string>
 #include <iostream>
-#include "include/json.hpp"
+#include "../include/json.hpp"
 
 
 class Widget {
 private:
     time_t lastRefreshed = 0;
-    time_t refreshInterval = 0;
+    time_t refreshInterval = 600;
 
 public:
     //configure method prompts the user for
     //input to choose the Widget selections
     virtual void configure() = 0;
-
-    //returns string representation of the json configuration
-    // we don't need to use this.
-    virtual std::string getConfiguration() = 0;
 
     //returns json configuration
     // This should be a json formatted like this:
@@ -38,7 +34,7 @@ public:
     //        "name": "name of widget"
     //        "data": {json data we want from api}
     //      }
-    virtual std::string refreshData() = 0;
+    virtual nlohmann::json refreshData() = 0;
 
     time_t getLastRefreshed(){
         return lastRefreshed;
@@ -49,10 +45,21 @@ public:
         lastRefreshed = lastRef;
     }
 
-    time_t getRefreshInterval()
+
+    /*******
+     * Gets the interval that the data should be updated
+     * override this to provide a refresh interval specific
+     * to your object
+     *
+     * @return time_t refresh interval
+     */
+
+    virtual time_t getRefreshInterval()
     {
         return refreshInterval;
     }
+
+
 
     void setRefreshInterval(time_t interval)
     {
@@ -61,7 +68,7 @@ public:
 
     std::string refresh()
     {
-        time_t elapsed = time(0) - lastRefreshed;
+        time_t elapsed = time(0) - getLastRefreshed();
         if (elapsed > getRefreshInterval())
         {
             //set last refreshed to now
