@@ -1,6 +1,6 @@
 
-#ifndef WIDGET_WEATHERWIDGET_H
-#define WIDGET_WEATHERWIDGET_H
+#ifndef WEATHERWIDGET_H
+#define WEATHERWIDGET_H
 
 #include <string>
 #include "Widget.h"
@@ -34,4 +34,4 @@ private:
 };
 
 
-#endif //WIDGET_WEATHERWIDGET_H
+#endif //WEATHERWIDGET_H
