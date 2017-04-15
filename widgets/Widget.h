@@ -1,7 +1,7 @@
 
 
-#ifndef TERMPROJ_WIDGET_H
-#define TERMPROJ_WIDGET_H
+#ifndef WIDGET_H
+#define WIDGET_H
 
 #include <string>
 #include <iostream>
@@ -79,4 +79,4 @@ public:
     }
 };
 
-#endif //TERMPROJ_WIDGET_H
+#endif //WIDGET_H
