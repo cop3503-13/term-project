@@ -54,7 +54,7 @@ public:
      * @return time_t refresh interval
      */
 
-    virtual time_t getRefreshInterval()
+    time_t getRefreshInterval()
     {
         return refreshInterval;
     }
