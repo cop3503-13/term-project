@@ -61,14 +61,6 @@ void Mirror::configure() {
         case 1:
             addWidget();
     }
-    /*
-     * get option:
-    *      A: Add a widget
-    *      E: Edit a selected widget
-    *      D: Delete a configured widget
-    *      S: Show configured widgets
-    *      X: Exit
-    */
 
     //switch (option){
         //if ADD
@@ -146,7 +138,10 @@ void Mirror::displayAddableWidgets()
 {
     std::string widgetOptions = "";
 
-    for (auto widget : allWidgets)
+    for (auto widgetName : allWidgets)
+    {
+        std::cout << "\t" + widgetName << std::endl;
+    }
 }
 
 

@@ -55,6 +55,8 @@ WeatherWidget::WeatherWidget(nlohmann::json config)
  Public
  ___________________________
  ****************************/
+ std::string getName(){ return "Weather"; };
+
 void WeatherWidget::configure()
 {
     std::string zip = "";
