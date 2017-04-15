@@ -37,13 +37,13 @@ private:
 
     /*************
      * This method will display main options:
-     *      A: Add a widget
-     *      E: Edit a selected widget
-     *      D: Delete a configured widget
-     *      S: Show configured widgets
-     *      X: Exit
+     *       Add a widget
+     *       Edit a selected widget
+     *       Delete a configured widget
+     *       Show configured widgets
+     *       Exit
      */
-    void displayMainOptions();
+    int displayMainOptions();
 
 
     /*****************************
@@ -60,6 +60,12 @@ private:
      * so only display the correct widgets;
      */
     void displayAddableWidgets();
+
+
+    /*************************
+     * shows the available widgets and asks for a choice
+     */
+    void addWidget();
 
 
     /**********************************

@@ -147,7 +147,7 @@ bool WeatherWidget::validZipCode(std::string zip)
         std::cout << "Sorry, zip codes must be 5 digits." << std::endl;
         return false;
     }
-    for (int i = 0; i < zip.length(); ++i)
+    for (size_t i = 0; i < zip.length(); ++i)
     {
         int charcode = zip[i] + 0;
         if (charcode < 48 || charcode > 57)

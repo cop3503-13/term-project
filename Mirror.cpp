@@ -1,6 +1,7 @@
 
 #include "Mirror.h"
 #include "widgets/WeatherWidget.h"
+#include <limits>
 
 /******************
  * Constructors
@@ -29,7 +30,7 @@ void Mirror::run()
     {
         if (!keyboard_hit())
         {
-            for(int i = 0; i < selectedWidgets.size(); ++i)
+            for(size_t i = 0; i < selectedWidgets.size(); ++i)
             {
                 Widget* widget = selectedWidgets[i];
                 if (widget->refresh() != "")
@@ -53,7 +54,13 @@ void Mirror::configure() {
 
     //ask for persons name?
 
-    displayMainOptions();
+    int choice = displayMainOptions();
+
+    switch (choice)
+    {
+        case 1:
+            addWidget();
+    }
     /*
      * get option:
     *      A: Add a widget
@@ -88,7 +95,32 @@ void Mirror::configure(std::string configFileName)
  * Private
  *****************/
 
-void Mirror::displayMainOptions()
+int Mirror::displayMainOptions()
+{
+    std::string message = "What would you like to do? \n";
+        message += "\t 1: Add a widget to your mirror \n";
+        message += "\t 2: List your chosen widgets\n";
+        message += "\t 3: Remove a chosen widget\n";
+        message += "\t 4: Edit a chosen widget\n";
+        message += "\t 5: Exit\n";
+
+    std::cout << message;
+
+    double dchoice;
+    int choice;
+    std::cin >> dchoice;
+    choice = (int)dchoice;
+    while (std::cin.fail() || choice < 0 || choice > 5 || choice != dchoice)
+    {
+        std::cout << "Error you must make a valid choice\n";
+        std::cout << message;
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cin >> choice;
+    }
+}
+
+void Mirror::addWidget()
 {
 
 }
@@ -112,7 +144,9 @@ void Mirror::displayExistingWidgets()
  */
 void Mirror::displayAddableWidgets()
 {
+    std::string widgetOptions = "";
 
+    for (auto widget : allWidgets)
 }
 
 
@@ -123,7 +157,12 @@ void Mirror::displayAddableWidgets()
  */
 void Mirror::addWidget(std::string widgetName)
 {
-
+    if (widgetName == "Weather")
+    {
+        Widget* widget = new WeatherWidget();
+        widget->configure();
+        selectedWidgets.push_back(widget);
+    }
 }
 
 
