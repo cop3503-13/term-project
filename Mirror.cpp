@@ -1,6 +1,6 @@
 
 #include "Mirror.h"
-#include "WeatherWidget.h"
+#include "widgets/WeatherWidget.h"
 
 /******************
  * Constructors
@@ -27,11 +27,12 @@ void Mirror::run()
 
     while (!exit)
     {
-        if (!keyboard_hit)
+        if (!keyboard_hit())
         {
-            for(Widget widget : selectedWidgets)
+            for(int i = 0; i < selectedWidgets.size(); ++i)
             {
-                if (widget.refresh() != "")
+                Widget* widget = selectedWidgets[i];
+                if (widget->refresh() != "")
                 {
                     //update the data file
                 }

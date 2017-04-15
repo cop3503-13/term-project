@@ -1,7 +1,7 @@
 #include "WeatherWidget.h"
 #include <string>
-#include "httpreq.h"
-#include "jsonhttpreq.h"
+#include "../include/httpreq.h"
+#include "../include/jsonhttpreq.h"
 
 
 
@@ -99,7 +99,7 @@ nlohmann::json WeatherWidget::getConfigurationJson()
 //returns string representation of weather results
 //
 //Uses the openweather API and then transforms into subset of information
-std::string WeatherWidget::refreshData()
+nlohmann::json WeatherWidget::refreshData()
 {
     JSONHTTPReq req = JSONHTTPReq();
     std::string url = ENDPOINT + "?zip=" + getZipCode() + ",us&appid=" + APIKEY;
