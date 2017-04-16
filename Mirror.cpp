@@ -134,7 +134,7 @@ void Mirror::configure(std::string configFileName)
 {
     //get the file
     //extract the widgets from the file
-    //call configure(json) on each widget
+    //call config(json) on each widget
 }
 
 
@@ -243,9 +243,9 @@ void Mirror::addWidget(std::string widgetName)
     }
 
 
-    widget->configure();
+    widget->config();
     selectedWidgets.push_back(widget);
-    updateConfigWidget(widget->getConfigurationJson());
+    updateConfigWidget(widget->getConfJSON());
 }
 
 

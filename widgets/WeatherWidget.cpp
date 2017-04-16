@@ -60,10 +60,10 @@ WeatherWidget::WeatherWidget(nlohmann::json config)
  ****************************/
  std::string getName(){ return "Weather"; };
 
-void WeatherWidget::configure()
+void WeatherWidget::config()
 {
     std::string zip = "";
-    std::cout << "Please configure the Weather Widget." << std::endl;
+    std::cout << "Please config the Weather Widget." << std::endl;
     std::cout << "What is your zipcode?" << std::endl;
     std::cout << "Zipcode: ";
     std::getline(std::cin, zip);
@@ -82,13 +82,13 @@ void WeatherWidget::configure()
 //used to create config file
 std::string WeatherWidget::getConfiguration()
 {
-    nlohmann::json configurationJson = getConfigurationJson();
+    nlohmann::json configurationJson = getConfJson();
     return configurationJson.dump(4);
 }
 
 //returns json representation of configuration,
 //used to create config file
-nlohmann::json WeatherWidget::getConfigurationJson()
+nlohmann::json WeatherWidget::getConfJson()
 {
     nlohmann::json configurationJson = {
             {"name", "Weather"},

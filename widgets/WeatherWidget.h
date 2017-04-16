@@ -12,10 +12,10 @@ public:
     WeatherWidget(std::string config);
     WeatherWidget(nlohmann::json config);
 
-    void configure();
+    void config();
     std::string getName();
     std::string getConfiguration();
-    nlohmann::json getConfigurationJson();
+    nlohmann::json getConfJson();
     nlohmann::json refreshData();
 
 private:

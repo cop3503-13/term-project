@@ -25,8 +25,8 @@ HTTPReq::HTTPReq(const std::string url, const bool verbose)
     init(url, verbose);
 }
 
-HTTPReq::HTTPReq(const std::string url,
-                 const bool verbose,
+HTTPReq::HTTPReq(const std::string url, 
+                 const bool verbose, 
                  const bool errOutput)
 {
     init(url, verbose, errOutput);
@@ -39,9 +39,8 @@ HTTPReq::~HTTPReq()
 
 
 
-
-void HTTPReq::init(std::string url,
-                   bool verbose,
+void HTTPReq::init(std::string url, 
+                   bool verbose, 
                    bool errOutput)
 {
     curl = curl_easy_init();
@@ -55,7 +54,7 @@ void HTTPReq::init(std::string url,
         curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
         // follow redirects
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-
+        
         setVerbose(verbose);
         setErrOutput(errOutput);
     }
@@ -146,7 +145,7 @@ void HTTPReq::send()
 
 
 
-void HTTPReq::setUrl(const std::string url)
+void HTTPReq::setUrl(const std::string& url)
 {
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     this->url = url;
