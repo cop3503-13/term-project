@@ -5,6 +5,12 @@
 #include <fstream>
 #include <iostream>
 
+/****************
+ * Static Constants
+ */
+
+const std::string Mirror::CONFIG_FILENAME = "mirror_config.json";
+
 /******************
  * Constructors
  *****************/
@@ -15,7 +21,19 @@ Mirror::Mirror()
 
 Mirror::Mirror(std::string configFileName)
 {
+    nlohmann::json conf;
+    std::ifstream str(configFileName);
+    str >> conf;
+    config = conf;
 
+    for (auto& existingWidgetConf : config["widgets"])
+    {
+        std::string name = existingWidgetConf["name"].get<std::string>();
+        if (name == "Weather")
+        {
+
+        }
+    }
 };
 
 Mirror::~Mirror()
@@ -55,10 +73,17 @@ void Mirror::run()
 
 
 void Mirror::configure() {
-    std::vector<nlohmann::json> configurationJsons;
+    std::string name = config["name"].get<std::string>();
+    if (name != "")
+    {
+        std::cout << "Hello " + name + ", welcome to your Magic Mirror. \n";
+    }
+    else
+    {
+        std::cout << "Hello, welcome to the Magic Mirror. \n";
+        changeName();
 
-    std::cout << "Hello, welcome to the Magic Mirror. \n";
-    changeName();
+    }
 
     int choice;
     bool moveOn = false;
@@ -78,6 +103,7 @@ void Mirror::configure() {
                 publishConfig();
                 break;
             case 3:
+                listChosenWidgets();
                 break;
             case 4:
                 break;
@@ -248,6 +274,16 @@ void Mirror::updateConfigWidget(nlohmann::json widgetConfig)
 
 }
 
+void Mirror::listChosenWidgets()
+{
+    std::cout << "Widgets chosen for " << data["name"] << ":" << std::endl;
+    for (auto& chosenWidget : config["widgets"])
+    {
+        std::cout << "\t" << chosenWidget["name"].get<std::string>() << std::endl;
+    }
+    std::cout << std::endl;
+}
+
 
 
 
@@ -391,9 +427,8 @@ void Mirror::publishData()
 
 void Mirror::publishConfig()
 {
-    std::string filename = "mirror_config.json";
     std::ofstream config_file;
-    config_file.open(filename);
+    config_file.open(Mirror::CONFIG_FILENAME);
     config_file << config.dump(4);
     config_file.close();
 }

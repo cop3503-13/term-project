@@ -16,6 +16,7 @@
 class Mirror {
 public:
     std::vector<Widget*> selectedWidgets;
+    static const std::string CONFIG_FILENAME;
 
     Mirror();
     Mirror(std::string configFilename);
@@ -29,8 +30,8 @@ private:
     bool webfile_open = false;
     std::string name;
     std::vector<std::string> const allWidgets = {"Weather", "Stock", "Quote"};
-    nlohmann::json config;
-    nlohmann::json data = {{"widgets", nlohmann::json::array()}};
+    nlohmann::json config = {{"name", ""}, {"widgets", nlohmann::json::array()}};
+    nlohmann::json data = {{"name", ""}, {"widgets", nlohmann::json::array()}};
 
 
     void configure();
@@ -70,6 +71,8 @@ private:
      * shows the available widgets and asks for a choice
      */
     void addWidget();
+
+    void listChosenWidgets();
 
 
     /**********************************
