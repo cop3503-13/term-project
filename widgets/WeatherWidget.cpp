@@ -10,7 +10,10 @@
  ____________________________
  ****************************/
 
-WeatherWidget::WeatherWidget(){}
+WeatherWidget::WeatherWidget()
+{
+    setRefreshInterval(10);
+}
 
 /************
  * config string parameter should be the whole configuration, like this:
@@ -109,7 +112,7 @@ nlohmann::json WeatherWidget::refreshData()
     req.send();
     nlohmann::json json = req.getJSONResponse();
     nlohmann::json transformedJson = transformResponse(json);
-    return transformedJson.dump(4);
+    return transformedJson;
 }
 
 

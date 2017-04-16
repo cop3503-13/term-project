@@ -8,7 +8,7 @@
  *****************/
 Mirror::Mirror()
 {
-
+    configure();
 };
 
 Mirror::Mirror(std::string configFileName)
@@ -16,7 +16,8 @@ Mirror::Mirror(std::string configFileName)
 
 };
 
-Mirror::~Mirror(){};
+Mirror::~Mirror()
+{};
 
 /******************
  * Public
@@ -24,8 +25,6 @@ Mirror::~Mirror(){};
 
 void Mirror::run()
 {
-    bool exit = false;
-
     while (!exit)
     {
         if (!keyboard_hit())
@@ -33,8 +32,14 @@ void Mirror::run()
             for(size_t i = 0; i < selectedWidgets.size(); ++i)
             {
                 Widget* widget = selectedWidgets[i];
-                if (widget->refresh() != "")
+                std::string refreshed = widget->refresh();
+                if (refreshed != "")
                 {
+                    nlohmann::json json = nlohmann::json::parse(refreshed);
+//                    data["widgets"][json["name"].get<std::string>()] = json;
+                    updateDataWidget(json);
+                    std::cout << "refreshed " + std::to_string(widget->getRefreshInterval()) << std::endl;
+                    std::cout << data.dump(4);
                     //update the data file
                 }
             }
@@ -49,29 +54,44 @@ void Mirror::run()
 
 
 void Mirror::configure() {
-
     std::vector<nlohmann::json> configurationJsons;
 
-    //ask for persons name?
+    std::cout << "Hello, welcome to the Magic Mirror. \n";
+    changeName();
 
-    int choice = displayMainOptions();
+    int choice;
+    bool moveOn = false;
 
-    switch (choice)
+    while (!moveOn)
     {
-        case 1:
-            addWidget();
+        choice = displayMainOptions();
+
+        switch (choice)
+        {
+            case 1:
+                addWidget();
+                break;
+            case 2:
+                changeName();
+                break;
+            case 3:
+                break;
+            case 4:
+                break;
+            case 5:
+                break;
+            case 6:
+                moveOn = true;
+                break;
+            case 7:
+                exitMirror();
+                moveOn = true;
+                break;
+            default:
+                break;
+        }
     }
 
-    //switch (option){
-        //if ADD
-        //display widget choices
-        //Widget* widget;
-        //switch (chosen widget)
-            // if ("weather") widget = new WeatherWidget;
-        //widget.configure();
-        //configurationJsons.push_back(widget->getConfigurationJson());
-
-    //}
 
 }
 
@@ -90,31 +110,47 @@ void Mirror::configure(std::string configFileName)
 int Mirror::displayMainOptions()
 {
     std::string message = "What would you like to do? \n";
-        message += "\t 1: Add a widget to your mirror \n";
-        message += "\t 2: List your chosen widgets\n";
-        message += "\t 3: Remove a chosen widget\n";
-        message += "\t 4: Edit a chosen widget\n";
-        message += "\t 5: Exit\n";
+    message += "\t 1: Add a widget to your mirror \n";
+    message += "\t 2: Change name\n";
+    if (selectedWidgets.size() > 0)
+    {
+        message += "\t 3: List your chosen widgets\n";
+        message += "\t 4: Remove a chosen widget\n";
+        message += "\t 5: Edit a chosen widget\n\n";
+        message += "\t 6: Run the Mirror\n";
+    }
+    message += "\t 7: Exit\n";
 
-    std::cout << message;
+
+    std::cout << "Hi " + data["name"].get<std::string>() << std::endl << message;
 
     double dchoice;
     int choice;
     std::cin >> dchoice;
     choice = (int)dchoice;
-    while (std::cin.fail() || choice < 0 || choice > 5 || choice != dchoice)
+    while (std::cin.fail() || choice < 0 || choice > 7 || choice != dchoice)
     {
         std::cout << "Error you must make a valid choice\n";
         std::cout << message;
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cin >> choice;
+        clearCin();
+
+        std::cin >> dchoice;
+        choice = (int)dchoice;
     }
+
+    return choice;
 }
 
 void Mirror::addWidget()
 {
+    std::string choice;
 
+    std::cout << "Which widget would you like to add from the following list?" << std::endl;
+    displayAddableWidgets();
+
+    std::cin >> choice;
+    clearCin();
+    addWidget(choice);
 }
 
 
@@ -185,4 +221,23 @@ nlohmann::json Mirror::getData()
 void Mirror::publishData()
 {
 
+}
+
+void Mirror::changeName()
+{
+    std::cout << std::endl << "What is your name?" << std::endl << "Name: ";
+    std::cin >> name;
+    config["name"] = name;
+    data["name"] = name;
+}
+
+void Mirror::clearCin()
+{
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.clear();
+}
+
+void Mirror::exitMirror()
+{
+    exit = true;
 }

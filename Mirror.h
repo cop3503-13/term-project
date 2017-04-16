@@ -25,15 +25,18 @@ public:
 
 private:
 
-    std::string name; //maybe store the person's name
-
+    bool exit = false;
+    std::string name;
     std::vector<std::string> const allWidgets = {"Weather", "Stock", "Quote"};
+    nlohmann::json config;
+    nlohmann::json data = {{"widgets", nlohmann::json::array()}};
 
 
     void configure();
 
-
     void configure(std::string configFileName);
+
+    void changeName();
 
     /*************
      * This method will display main options:
@@ -96,6 +99,22 @@ private:
      */
     void publishData();
 
+    void updateDataWidget(nlohmann::json widgetData)
+    {
+        bool found = false;
+        for (auto& widget : data["widgets"])
+        {
+            if (widget["name"].get<std::string>() == widgetData["name"].get<std::string>())
+            {
+                found = true;
+                widget = widgetData;
+            }
+        }
+
+        if (!found)
+            data["widgets"].push_back(widgetData);
+    }
+
     /**
      Linux (POSIX) implementation of _kbhit().
      Morgan McGuire, morgan@cs.brown.edu
@@ -128,7 +147,9 @@ private:
         return bytesWaiting;
     }
 
+    void clearCin();
 
+    void exitMirror();
 };
 
 

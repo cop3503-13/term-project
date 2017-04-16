@@ -14,8 +14,6 @@ private:
     time_t refreshInterval = 600;
 
 public:
-    virtual std::string getName();
-
     //configure method prompts the user for
     //input to choose the Widget selections
     virtual void configure() = 0;
@@ -75,7 +73,7 @@ public:
         {
             //set last refreshed to now
             setLastRefreshed(time(0));
-            return refreshData();
+            return refreshData().dump(4);
         }
         return "";
     }

@@ -6,9 +6,10 @@ int main(int argc, char** argv) {
     Mirror* mirror;
 
     //check for configuration file
-    std::string configFileName;
+    std::string configFileName = "";
     if (configFileName == "")
     {
+        std::cout << "empty constructor" << std::endl;
         //no file found
         mirror = new Mirror();
     }
