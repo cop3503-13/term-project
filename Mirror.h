@@ -26,6 +26,7 @@ public:
 private:
 
     bool exit = false;
+    bool webfile_open = false;
     std::string name;
     std::vector<std::string> const allWidgets = {"Weather", "Stock", "Quote"};
     nlohmann::json config;
@@ -99,21 +100,10 @@ private:
      */
     void publishData();
 
-    void updateDataWidget(nlohmann::json widgetData)
-    {
-        bool found = false;
-        for (auto& widget : data["widgets"])
-        {
-            if (widget["name"].get<std::string>() == widgetData["name"].get<std::string>())
-            {
-                found = true;
-                widget = widgetData;
-            }
-        }
+    void publishConfig();
 
-        if (!found)
-            data["widgets"].push_back(widgetData);
-    }
+    void updateDataWidget(nlohmann::json widgetData);
+    void updateConfigWidget(nlohmann::json widgetConfig);
 
     /**
      Linux (POSIX) implementation of _kbhit().

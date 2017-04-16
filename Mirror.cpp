@@ -2,6 +2,8 @@
 #include "Mirror.h"
 #include "widgets/WeatherWidget.h"
 #include <limits>
+#include <fstream>
+#include <iostream>
 
 /******************
  * Constructors
@@ -36,11 +38,10 @@ void Mirror::run()
                 if (refreshed != "")
                 {
                     nlohmann::json json = nlohmann::json::parse(refreshed);
-//                    data["widgets"][json["name"].get<std::string>()] = json;
                     updateDataWidget(json);
                     std::cout << "refreshed " + std::to_string(widget->getRefreshInterval()) << std::endl;
                     std::cout << data.dump(4);
-                    //update the data file
+                    publishData();
                 }
             }
         }
@@ -70,9 +71,11 @@ void Mirror::configure() {
         {
             case 1:
                 addWidget();
+                publishConfig();
                 break;
             case 2:
                 changeName();
+                publishConfig();
                 break;
             case 3:
                 break;
@@ -193,6 +196,7 @@ void Mirror::addWidget(std::string widgetName)
         Widget* widget = new WeatherWidget();
         widget->configure();
         selectedWidgets.push_back(widget);
+        updateConfigWidget(widget->getConfigurationJson());
     }
 }
 
@@ -208,20 +212,44 @@ void Mirror::addWidget(std::string widgetName)
  */
 nlohmann::json Mirror::getData()
 {
-
+    return data;
 }
 
-
-/*****************************************
- * This uses the getData() return to
- * write the html file that will be displayed
- * on the system
- *
- */
-void Mirror::publishData()
+void Mirror::updateDataWidget(nlohmann::json widgetData)
 {
+    bool found = false;
+    for (auto& widget : data["widgets"])
+    {
+        if (widget["name"].get<std::string>() == widgetData["name"].get<std::string>())
+        {
+            found = true;
+            widget = widgetData;
+        }
+    }
+
+    if (!found)
+        data["widgets"].push_back(widgetData);
+}
+
+void Mirror::updateConfigWidget(nlohmann::json widgetConfig)
+{
+    bool found = false;
+    for (auto& existingWidgetConf : config["widgets"])
+    {
+        if (existingWidgetConf["name"].get<std::string>() == widgetConfig["name"].get<std::string>())
+        {
+            found = true;
+            existingWidgetConf = widgetConfig;
+        }
+    }
+
+    if (!found)
+        config["widgets"].push_back(widgetConfig);
 
 }
+
+
+
 
 void Mirror::changeName()
 {
@@ -240,4 +268,132 @@ void Mirror::clearCin()
 void Mirror::exitMirror()
 {
     exit = true;
+}
+
+/*****************************************
+ * This uses the getData() return to
+ * write the html file that will be displayed
+ * on the system
+ *
+ */
+void Mirror::publishData()
+{
+    const char* begin_html = "<!doclabel html>\n"
+            "<html ng-app=\"App\" >\n"
+            "<head>\n"
+            "    <meta charset=\"utf-8\">\n"
+            "    <title>Magic Mirror</title>\n"
+            "    <script src=\"https://ajax.googleapis.com/ajax/libs/angularjs/1.2.1/angular.js\"></script>\n"
+            "    <script>\n"
+            "        (function(){\n"
+            "            data = ";
+
+    const char* end_html = "})();\n"
+            "    </script>\n"
+            "    <script label=\"text/javascript\">\n"
+            "        (function(){\n"
+            "            var App = angular.module('App', []);\n"
+            "            App.controller('MirrorCtrl', function($scope, $interval) {\n"
+            "                $scope.name = data[\"name\"];\n"
+            "                $scope.widgets = data[\"widgets\"];\n"
+            "                $scope.date = function() {return new Date() };\n"
+            "                $interval(function(){\n"
+            "                     document.location.reload()\n"
+            "                 }, 1000);\n"
+            "            });\n"
+            "        })()\n"
+            "    </script>\n"
+            "    <style label=\"text/css\">\n"
+            "        body{\n"
+            "            font-family: Helvetica, Arial, sans-serif;\n"
+            "            background-color: black;\n"
+            "            color: white;\n"
+            "            text-transform: capitalize;\n"
+            "        }\n"
+            "        div > div{\n"
+            "            margin-left: 10px;\n"
+            "            margin-top: 0px;\n"
+            "            padding-top: 0px;\n"
+            "        }\n"
+            "        div > span {\n"
+            "            margin-right: 10px;\n"
+            "        }\n"
+            "        .widget{\n"
+            "            margin: 20px;\n"
+            "            width: 35%;\n"
+            "            max-width: 35%;\n"
+            "            height: 250px;\n"
+            "            color: white;\n"
+            "            background-color: #171819;\n"
+            "            float: left;\n"
+            "        }\n"
+            "        .widget:nth-child(even){\n"
+            "            float: right;\n"
+            "        }\n"
+            "        h1,h2,h3,h4,h5,h6{\n"
+            "            margin-bottom: 2px;\n"
+            "            margin-top: 2px;\n"
+            "        }\n"
+            "    </style>\n"
+            "</head>\n"
+            "<body ng-controller=\"MirrorCtrl\">\n"
+            "    <h1>Hello {{name}}</h1>\n"
+            "<div class=\"widget\" ng-repeat=\"widget in widgets\">\n"
+            "    <h2 ng-bind=\"widget.name\"></h2>\n"
+            "    <div ng-if=\"widget.name == 'Time'\">\n"
+            "        <script> date = new Date()</script>\n"
+            "        <div>{{ date() | date:''}}</div>\n"
+            "        <div>{{ date() | date:'h:mm a' }}</div>\n"
+            "    </div>\n"
+            "    <div ng-if=\"widget.name == 'Weather'\">\n"
+            "        <div>\n"
+            "            <h3 ng-bind=\"widget.data.city\"></h3>\n"
+            "            <div>{{widget.data.description}} - {{widget.data.temp}}&deg; F</div>\n"
+            "        </div>\n"
+            "    </div>\n"
+            "    <div ng-if=\"widget.name == 'Stocks'\">\n"
+            "        <div ng-repeat=\"stock in widget.data\">\n"
+            "            <h3 ng-bind=\"stock.label\"></h3>\n"
+            "            <div>${{stock.data}}</div>\n"
+            "        </div>\n"
+            "    </div>\n"
+            "    <div ng-if=\"widget.name == 'Movies'\">\n"
+            "        <div ng-repeat=\"location in widget.data\">\n"
+            "            <h3 ng-bind=\"location.label\"></h3>\n"
+            "            <div ng-repeat=\"movie in location.data\">\n"
+            "                <h4>{{movie.label}}</h4>\n"
+            "                <span ng-repeat=\"time in movie.data\">{{time}}</span>\n"
+            "            </div>\n"
+            "        </div>\n"
+            "    </div>\n"
+            "    <div ng-if=\"widget.name == 'News'\">\n"
+            "\n"
+            "    </div>\n"
+            "</div>\n"
+            "<h2>{{data.foo}}</h2>\n"
+            "</body>\n"
+            "</html>";
+
+    std::ofstream html_file;
+    std::string filename = data["name"].get<std::string>() + "_mirror.html";
+    html_file.open(filename);
+    html_file << begin_html;
+    html_file << data.dump(4);
+    html_file << end_html;
+    html_file.close();
+    if (!webfile_open)
+    {
+        std::string command = "xdg-open " + filename + " &";
+        system(command.c_str());
+        webfile_open = true;
+    }
+}
+
+void Mirror::publishConfig()
+{
+    std::string filename = "mirror_config.json";
+    std::ofstream config_file;
+    config_file.open(filename);
+    config_file << config.dump(4);
+    config_file.close();
 }
