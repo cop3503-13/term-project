@@ -13,10 +13,14 @@ private:
     time_t lastRefreshed = 0;
     time_t refreshInterval = 600;
 
+protected:
+    std::string const name;
+    nlohmann::json conf;
+
 public:
-    //configure method prompts the user for
-    //input to choose the Widget selections
-    virtual void configure() = 0;
+
+    Widget(std::string const &nameIt) : name(nameIt){};
+    virtual ~Widget(){};
 
     //returns json configuration
     // This should be a json formatted like this:
@@ -24,26 +28,12 @@ public:
     //    "name": "widget name",
     //    "configuration": {configuration options here}
     //  }
-    virtual nlohmann::json getConfigurationJson() = 0;
+    nlohmann::json getConfJSON();
 
-    //returns json configuration
-    // this will switch to"
-    // virtual nlohmann::json  refreshData() = 0
-    // this should return json in the format:
-    //     {  
-    //        "name": "name of widget"
-    //        "data": {json data we want from api}
-    //      }
-    virtual nlohmann::json refreshData() = 0;
+    const std::string& getName();
 
-    time_t getLastRefreshed(){
-        return lastRefreshed;
-    }
-
-    void setLastRefreshed(time_t lastRef)
-    {
-        lastRefreshed = lastRef;
-    }
+    time_t getLastRefreshed();
+    void setLastRefreshed(time_t lastRef);
 
 
     /*******
@@ -54,29 +44,28 @@ public:
      * @return time_t refresh interval
      */
 
-    virtual time_t getRefreshInterval()
-    {
-        return refreshInterval;
-    }
+    time_t getRefreshInterval();
+    void setRefreshInterval(time_t interval);
+
+    std::string refresh();
+
+    /******************
+     * VIRTUAL METHODS TO BE OVERRIDEN ON INHERITANCE
+     */
 
 
+    //config method prompts the user for
+    //input to choose the Widget selections
+    virtual void config() = 0;
 
-    void setRefreshInterval(time_t interval)
-    {
-        refreshInterval = interval;
-    }
+    //returns json configuration
+    // this should return json in the format:
+    //     {
+    //        "name": "name of widget"
+    //        "data": {json data we want from api}
+    //      }
+    virtual nlohmann::json refreshData() = 0;
 
-    std::string refresh()
-    {
-        time_t elapsed = time(0) - getLastRefreshed();
-        if (elapsed > getRefreshInterval())
-        {
-            //set last refreshed to now
-            setLastRefreshed(time(0));
-            return refreshData();
-        }
-        return "";
-    }
 };
 
 #endif //WIDGET_H

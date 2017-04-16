@@ -10,7 +10,11 @@
  ____________________________
  ****************************/
 
-WeatherWidget::WeatherWidget(){}
+WeatherWidget::WeatherWidget() : Widget(WEATHERWIDGET_NAME)
+{
+    config();
+    setRefreshInterval(10);
+}
 
 /************
  * config string parameter should be the whole configuration, like this:
@@ -24,7 +28,7 @@ WeatherWidget::WeatherWidget(){}
  * @param config
  */
 
-WeatherWidget::WeatherWidget(std::string config)
+WeatherWidget::WeatherWidget(std::string config) : Widget(WEATHERWIDGET_NAME)
 {
     nlohmann::json configJson = nlohmann::json::parse(config);
     setZipCode(configJson["configuration"]["zip"]);
@@ -38,10 +42,9 @@ WeatherWidget::WeatherWidget(std::string config)
  *
  * @param config
  */
-WeatherWidget::WeatherWidget(nlohmann::json config)
+WeatherWidget::WeatherWidget(nlohmann::json config) : Widget(WEATHERWIDGET_NAME)
 {
-    setZipCode(config["zip"]);
-    setRefreshInterval(config["refreshInterval"]);
+    conf = config;
 }
 
 
@@ -55,10 +58,11 @@ WeatherWidget::WeatherWidget(nlohmann::json config)
  Public
  ___________________________
  ****************************/
-void WeatherWidget::configure()
+
+void WeatherWidget::config()
 {
     std::string zip = "";
-    std::cout << "Please configure the Weather Widget." << std::endl;
+    std::cout << "Please config the Weather Widget." << std::endl;
     std::cout << "What is your zipcode?" << std::endl;
     std::cout << "Zipcode: ";
     std::getline(std::cin, zip);
@@ -70,44 +74,26 @@ void WeatherWidget::configure()
     }
 
     setZipCode(zip);
-}
-
-
-//returns string representation of configuration,
-//used to create config file
-std::string WeatherWidget::getConfiguration()
-{
-    nlohmann::json configurationJson = getConfigurationJson();
-    return configurationJson.dump(4);
-}
-
-//returns json representation of configuration,
-//used to create config file
-nlohmann::json WeatherWidget::getConfigurationJson()
-{
-    nlohmann::json configurationJson = {
-            {"name", "Weather"},
-            {"configuration", {
-                             {"zip", getZipCode()},
-                             {"refreshInterval", getRefreshInterval()}
-                     }}
+    conf = {
+            {"zip", getZipCode()},
+            {"refreshInterval", getRefreshInterval()}
     };
-
-    return configurationJson;
 }
+
 
 //returns string representation of weather results
 //
 //Uses the openweather API and then transforms into subset of information
 nlohmann::json WeatherWidget::refreshData()
 {
+
     JSONHTTPReq req = JSONHTTPReq();
     std::string url = ENDPOINT + "?zip=" + getZipCode() + ",us&appid=" + APIKEY;
     req.setUrl(url);
     req.send();
     nlohmann::json json = req.getJSONResponse();
     nlohmann::json transformedJson = transformResponse(json);
-    return transformedJson.dump(4);
+    return transformedJson;
 }
 
 
@@ -147,7 +133,7 @@ bool WeatherWidget::validZipCode(std::string zip)
         std::cout << "Sorry, zip codes must be 5 digits." << std::endl;
         return false;
     }
-    for (int i = 0; i < zip.length(); ++i)
+    for (size_t i = 0; i < zip.length(); ++i)
     {
         int charcode = zip[i] + 0;
         if (charcode < 48 || charcode > 57)
@@ -166,7 +152,7 @@ bool WeatherWidget::validZipCode(std::string zip)
     nlohmann::json json = req.getJSONResponse();
     if (json["cod"] == "200" || json["cod"] == 200)
         return true;
-    if (json["cod"] == "404" || json["cod"] == 404)
+    if (json["cod"] == "404" || json["cod"] == 404 || json["cod"] == "500" || json["cod"] == 500)
         std::cout << "Error: bad zip code, " << json["message"] << std::endl;
     return false;
 }
@@ -174,13 +160,14 @@ bool WeatherWidget::validZipCode(std::string zip)
 
 std::string WeatherWidget::getZipCode()
 {
-    return zipcode;
+    return conf["zip"];
 }
 
 
 void WeatherWidget::setZipCode(std::string zip)
 {
     zipcode = zip;
+    conf["zip"] = zip;
 }
 
 /*****************
@@ -201,10 +188,5 @@ nlohmann::json WeatherWidget::transformResponse(nlohmann::json response)
             {"description", response["weather"][0]["description"]}
     };
 
-    nlohmann::json json = {
-            {"name", "Weather"},
-            {"data", data}
-    };
-
-    return json;
+    return data;
 };

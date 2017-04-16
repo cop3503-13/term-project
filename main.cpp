@@ -1,20 +1,25 @@
 #include <iostream>
+#include <fstream>
 #include "Mirror.h"
 
+bool file_exists(std::string filename)
+{
+    std::ifstream f(filename);
+    return f.good();
+}
 
 int main(int argc, char** argv) {
     Mirror* mirror;
 
-    //check for configuration file
-    std::string configFileName;
-    if (configFileName == "")
+
+    if (file_exists(Mirror::CONFIG_FILENAME))
     {
-        //no file found
-        mirror = new Mirror();
+        mirror = new Mirror(Mirror::CONFIG_FILENAME);
     }
     else
     {
-        mirror = new Mirror(configFileName);
+        //no file found
+        mirror = new Mirror();
     }
 
     mirror->run();

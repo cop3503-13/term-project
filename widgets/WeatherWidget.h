@@ -2,6 +2,8 @@
 #ifndef WEATHERWIDGET_H
 #define WEATHERWIDGET_H
 
+#define WEATHERWIDGET_NAME "Weather"
+
 #include <string>
 #include "Widget.h"
 #include "../include/json.hpp"
@@ -9,12 +11,12 @@
 class WeatherWidget : public Widget {
 public:
     WeatherWidget();
-    WeatherWidget(std::string config);
+
+    WeatherWidget(std::string config) ;
+
     WeatherWidget(nlohmann::json config);
 
-    void configure();
-    std::string getConfiguration();
-    nlohmann::json getConfigurationJson();
+    void config();
     nlohmann::json refreshData();
 
 private:

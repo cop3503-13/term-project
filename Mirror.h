@@ -16,6 +16,7 @@
 class Mirror {
 public:
     std::vector<Widget*> selectedWidgets;
+    static const std::string CONFIG_FILENAME;
 
     Mirror();
     Mirror(std::string configFilename);
@@ -25,25 +26,29 @@ public:
 
 private:
 
-    std::string name; //maybe store the person's name
-
-    std::vector<std::string> const allWidgets = {"Weather", "Stock", "Quote"};
+    bool exit = false;
+    bool webfile_open = false;
+    std::string name;
+    std::vector<std::string> const allWidgets = {"Weather", "Movie"};
+    nlohmann::json config = {{"name", ""}, {"widgets", nlohmann::json::array()}};
+    nlohmann::json data = {{"name", ""}, {"widgets", nlohmann::json::array()}};
 
 
     void configure();
 
-
     void configure(std::string configFileName);
+
+    void changeName();
 
     /*************
      * This method will display main options:
-     *      A: Add a widget
-     *      E: Edit a selected widget
-     *      D: Delete a configured widget
-     *      S: Show configured widgets
-     *      X: Exit
+     *       Add a widget
+     *       Edit a selected widget
+     *       Delete a configured widget
+     *       Show configured widgets
+     *       Exit
      */
-    void displayMainOptions();
+    int displayMainOptions();
 
 
     /*****************************
@@ -60,6 +65,14 @@ private:
      * so only display the correct widgets;
      */
     void displayAddableWidgets();
+
+
+    /*************************
+     * shows the available widgets and asks for a choice
+     */
+    void addWidget();
+
+    void listChosenWidgets();
 
 
     /**********************************
@@ -89,6 +102,11 @@ private:
      *
      */
     void publishData();
+
+    void publishConfig();
+
+    void updateDataWidget(nlohmann::json widgetData);
+    void updateConfigWidget(nlohmann::json widgetConfig);
 
     /**
      Linux (POSIX) implementation of _kbhit().
@@ -122,7 +140,9 @@ private:
         return bytesWaiting;
     }
 
+    void clearCin();
 
+    void exitMirror();
 };
 
 
