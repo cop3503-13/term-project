@@ -4,6 +4,7 @@
 #include <limits>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 /****************
  * Static Constants
@@ -25,15 +26,20 @@ Mirror::Mirror(std::string configFileName)
     std::ifstream str(configFileName);
     str >> conf;
     config = conf;
+    data["name"] = config["name"];
 
     for (auto& existingWidgetConf : config["widgets"])
     {
+        Widget* widget;
         std::string name = existingWidgetConf["name"].get<std::string>();
         if (name == "Weather")
         {
-
+            widget = new WeatherWidget(existingWidgetConf["configuration"]);
+            selectedWidgets.push_back(widget);
         }
     }
+    if (selectedWidgets.size() < 1)
+        configure();
 };
 
 Mirror::~Mirror()
@@ -179,6 +185,15 @@ void Mirror::addWidget()
 
     std::cin >> choice;
     clearCin();
+    while (std::find(allWidgets.begin(), allWidgets.end(), choice) == allWidgets.end())
+    {
+        std::cout << "Invalid widget choice, please try again" << std::endl;
+        std::cout << "Which widget would you like to add from the following list?" << std::endl;
+        displayAddableWidgets();
+
+        std::cin >> choice;
+        clearCin();
+    }
     addWidget(choice);
 }
 
@@ -217,13 +232,20 @@ void Mirror::displayAddableWidgets()
  */
 void Mirror::addWidget(std::string widgetName)
 {
+    Widget* widget;
     if (widgetName == "Weather")
     {
-        Widget* widget = new WeatherWidget();
-        widget->configure();
-        selectedWidgets.push_back(widget);
-        updateConfigWidget(widget->getConfigurationJson());
+        widget = new WeatherWidget();
     }
+    else if (widgetName == "anotherWidget")
+    {
+        //
+    }
+
+
+    widget->configure();
+    selectedWidgets.push_back(widget);
+    updateConfigWidget(widget->getConfigurationJson());
 }
 
 
