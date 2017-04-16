@@ -2,10 +2,12 @@
 #include "Mirror.h"
 #include "widgets/WeatherWidget.h"
 #include "widgets/MovieWidget.h"
+#include "widgets/QuoteOfTheDayWidget.h"
 #include <limits>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include "include/common.h"
 
 /****************
  * Static Constants
@@ -42,6 +44,11 @@ Mirror::Mirror(std::string configFileName)
             if (name == "Movie")
             {
                 widget = new MovieWidget(existingWidgetConf["configuration"]);
+                selectedWidgets.push_back(widget);
+            }
+            if (name == "QuoteOfTheDay")
+            {
+                widget = new QuoteOfTheDayWidget(existingWidgetConf["configuration"]);
                 selectedWidgets.push_back(widget);
             }
         }
@@ -122,13 +129,12 @@ void Mirror::configure() {
                 listChosenWidgets();
                 break;
             case 4:
+                removeWidget();
                 break;
             case 5:
-                break;
-            case 6:
                 moveOn = true;
                 break;
-            case 7:
+            case 6:
                 exitMirror();
                 moveOn = true;
                 break;
@@ -157,14 +163,13 @@ int Mirror::displayMainOptions()
     std::string message = "What would you like to do? \n";
     message += "\t 1: Add a widget to your mirror \n";
     message += "\t 2: Change name\n";
-    if (selectedWidgets.size() > 0)
+    if (config["widgets"].size() > 0)
     {
         message += "\t 3: List your chosen widgets\n";
-        message += "\t 4: Remove a chosen widget\n";
-        message += "\t 5: Edit a chosen widget\n\n";
-        message += "\t 6: Run the Mirror\n";
+        message += "\t 4: Remove a chosen widget\n\n";
+        message += "\t 5: Run the Mirror\n";
     }
-    message += "\t 7: Exit\n";
+    message += "\t 6: Exit\n";
 
 
     std::cout << "Hi " + data["name"].get<std::string>() << std::endl << message;
@@ -173,7 +178,7 @@ int Mirror::displayMainOptions()
     int choice;
     std::cin >> dchoice;
     choice = (int)dchoice;
-    while (std::cin.fail() || choice < 0 || choice > 7 || choice != dchoice)
+    while (std::cin.fail() || (!std::cin.eof() && std::cin.peek() != 10) || choice < 1 || choice > 6 || choice != dchoice)
     {
         std::cout << "Error you must make a valid choice\n";
         std::cout << message;
@@ -186,51 +191,82 @@ int Mirror::displayMainOptions()
     return choice;
 }
 
-void Mirror::addWidget()
+void Mirror::removeWidget()
 {
-    std::string choice;
+    std::vector<std::string> chosenWidgets = getChosenWidgets();
 
-    std::cout << "Which widget would you like to add from the following list?" << std::endl;
-    displayAddableWidgets();
-
-    std::cin >> choice;
-    clearCin();
-    while (std::find(allWidgets.begin(), allWidgets.end(), choice) == allWidgets.end())
+    if (chosenWidgets.size() < 1)
     {
-        std::cout << "Invalid widget choice, please try again" << std::endl;
-        std::cout << "Which widget would you like to add from the following list?" << std::endl;
-        displayAddableWidgets();
+        std::cout << "There are no widgets to remove, please choose another option." << std::endl << std::endl;
+    }
+    else
+    {
+        std::string choice;
+        std::string cancelMsg = "Type \"cancel\" to go back\n\n";
+        std::string choicesMsg = "Which widget would you like to remove from your Magic Mirror?\n\t" + Common::join(chosenWidgets, "\n\t");
+
+        std::cout << choicesMsg << std::endl << cancelMsg;
 
         std::cin >> choice;
         clearCin();
+
+        while(!Common::contains(chosenWidgets, choice))
+        {
+            std::cout << "Invalid widget choice, please try again" << std::endl;
+            std::cout << choicesMsg << std::endl << cancelMsg;
+            std::cin >> choice;
+            clearCin();
+        }
+        if (choice != "cancel")
+            removeWidget(choice);
     }
-    addWidget(choice);
 }
 
-
-/*****************************
- * Display a list of selected/configured widgets
- * use this when user wants to  delete or edit
- */
-void Mirror::displayExistingWidgets()
+void Mirror::removeWidget(std::string widgetName)
 {
-
-}
-
-
-/********************************
- * Display a list of widgets able to be added
- * For example, some widgets might be able to be
- * added more than once, but others only once,
- * so only display the correct widgets;
- */
-void Mirror::displayAddableWidgets()
-{
-    std::string widgetOptions = "";
-
-    for (auto widgetName : allWidgets)
+    for (size_t i = 0; i < config["widgets"].size(); ++i)
     {
-        std::cout << "\t" + widgetName << std::endl;
+        if (config["widgets"][i]["name"].get<std::string>() == widgetName)
+            config["widgets"].erase(i);
+    }
+
+    publishConfig();
+}
+
+void Mirror::addWidget()
+{
+
+    std::vector<std::string> availableWidgets = getAvailableWidgets();
+    if (availableWidgets.size() < 1)
+    {
+        std::cout << "You have configured all available widgets, please choose another option." << std::endl << std::endl;
+    }
+    else
+    {
+        std::string choice;
+        std::string cancelMsg = "Type \"cancel\" to go back\n\n";
+        std::string choicesMsg = "Which widget would you like to add from the following list?\n\t" + Common::join(availableWidgets, "\n\t");
+
+        std::cout << choicesMsg << std::endl << cancelMsg;
+
+        std::cin >> choice;
+        clearCin();
+        while (!Common::contains(availableWidgets, choice) && choice != "cancel")
+        {
+            if (widgetIsConfigured(choice))
+            {
+                std::cout << "This widget is already configured, if you want to re-configure, please remove it first." <<std::endl;
+            }
+            else
+            {
+                std::cout << "Invalid widget choice, please try again" << std::endl;
+            }
+            std::cout << choicesMsg << std::endl << cancelMsg;
+            std::cin >> choice;
+            clearCin();
+        }
+        if (choice != "cancel")
+            addWidget(choice);
     }
 }
 
@@ -251,6 +287,10 @@ void Mirror::addWidget(std::string widgetName)
     {
         widget = new MovieWidget();
     }
+    else if (widgetName == "QuoteOfTheDay")
+    {
+        widget = new QuoteOfTheDayWidget();
+    }
 
     selectedWidgets.push_back(widget);
     nlohmann::json configuration = {{"name", widget->getName()}, {"configuration", widget->getConfJSON()}};
@@ -260,18 +300,6 @@ void Mirror::addWidget(std::string widgetName)
 
 
 
-/*****************************
- * Basically, get the json results of each selectedWidget
- * and combine to make a big json object
- * foreach widget in selectedWidgets
- *                  widget.refreshData()
- *
- * @return json results of ALL selectedwidgets
- */
-nlohmann::json Mirror::getData()
-{
-    return data;
-}
 
 void Mirror::updateDataWidget(nlohmann::json widgetData)
 {
@@ -306,17 +334,14 @@ void Mirror::updateConfigWidget(nlohmann::json widgetConfig)
         std::cout << "existing config: " << config["widgets"].dump(4) << std::endl;
         for (nlohmann::json& exist : config["widgets"])
         {
-            std::cout << "name: " << exist["name"].get<std::string>() << std::endl;
+            std::string existing_name = exist["name"].get<std::string>();
+            std::string name_to_add = widgetConfig["name"].get<std::string>();
 
-        std::string existing_name = exist["name"].get<std::string>();
-        std::string name_to_add = widgetConfig["name"].get<std::string>();
-
-
-        if (existing_name == name_to_add)
-        {
-            found = true;
-            exist = widgetConfig;
-        }
+            if (existing_name == name_to_add)
+            {
+                found = true;
+                exist = widgetConfig;
+            }
         }
     }
 
@@ -324,18 +349,46 @@ void Mirror::updateConfigWidget(nlohmann::json widgetConfig)
     if (!found)
         config["widgets"].push_back(widgetConfig);
 
-    std::cout << "size now: " << config["widgets"].size() << std::endl;
-
 }
 
 void Mirror::listChosenWidgets()
 {
-    std::cout << "Widgets chosen for " << data["name"] << ":" << std::endl;
+    std::cout << "Widgets chosen for " << data["name"] << ":\n\t";
+    std::cout << Common::join(getChosenWidgets(), "\n\t");
+    std::cout << std::endl << std::endl;
+}
+
+std::vector<std::string> Mirror::getChosenWidgets()
+{
+    std::vector<std::string> chosenWidgets;
     for (auto& chosenWidget : config["widgets"])
     {
-        std::cout << "\t" << chosenWidget["name"].get<std::string>() << std::endl;
+        chosenWidgets.push_back(chosenWidget["name"].get<std::string>());
     }
-    std::cout << std::endl;
+
+    return chosenWidgets;
+}
+
+std::vector<std::string> Mirror::getAvailableWidgets()
+{
+    std::vector<std::string> availableWidgets = {};
+
+    for(std::string widgetName : allWidgets)
+    {
+        std::vector<std::string> chosenWidgets = getChosenWidgets();
+        if (std::find(chosenWidgets.begin(), chosenWidgets.end(), widgetName) == chosenWidgets.end())
+            availableWidgets.push_back(widgetName);
+    }
+
+    return availableWidgets;
+}
+
+bool Mirror::widgetIsConfigured(std::string widgetName)
+{
+    std::vector<std::string> chosenWidgets = getChosenWidgets();
+    if (std::find(chosenWidgets.begin(), chosenWidgets.end(), widgetName) != chosenWidgets.end())
+        return true;
+    return false;
 }
 
 
@@ -351,8 +404,8 @@ void Mirror::changeName()
 
 void Mirror::clearCin()
 {
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
 void Mirror::exitMirror()
