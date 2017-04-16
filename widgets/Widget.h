@@ -19,6 +19,9 @@ protected:
 
 public:
 
+    Widget(std::string const &nameIt) : name(nameIt){};
+    virtual ~Widget(){};
+
     //returns json configuration
     // This should be a json formatted like this:
     // {

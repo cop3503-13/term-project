@@ -1,5 +1,4 @@
 #include "httpreq.h"
-#include "curl/curl.h"
 
 /* TODO:
     Don't construct object if curl null (exception)
@@ -25,8 +24,8 @@ HTTPReq::HTTPReq(const std::string url, const bool verbose)
     init(url, verbose);
 }
 
-HTTPReq::HTTPReq(const std::string url, 
-                 const bool verbose, 
+HTTPReq::HTTPReq(const std::string url,
+                 const bool verbose,
                  const bool errOutput)
 {
     init(url, verbose, errOutput);
@@ -39,8 +38,8 @@ HTTPReq::~HTTPReq()
 
 
 
-void HTTPReq::init(std::string url, 
-                   bool verbose, 
+void HTTPReq::init(std::string url,
+                   bool verbose,
                    bool errOutput)
 {
     curl = curl_easy_init();
@@ -54,7 +53,7 @@ void HTTPReq::init(std::string url,
         curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);
         // follow redirects
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        
+
         setVerbose(verbose);
         setErrOutput(errOutput);
     }
@@ -144,6 +143,21 @@ void HTTPReq::send()
 
 
 
+bool HTTPReq::isOk()
+{
+    return responseCode == CURLE_OK;
+}
+
+
+const long HTTPReq::getHTTPStatus()
+{
+    long http_code;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+    return http_code;
+}
+
+
+
 
 void HTTPReq::setUrl(const std::string& url)
 {
@@ -151,23 +165,6 @@ void HTTPReq::setUrl(const std::string& url)
     this->url = url;
 }
 
-/*
-void HTTPReq::setUrl(const std::string url)
-{
-    char *urlStr = url.c_str();
-    urlStr = curl_easy_escape(curl, urlStr, strlen(urlStr));
-	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    this->url = urlStr;
-}
-
-
-void HTTPReq::setUrl(char * url)
-{
-    url = curl_easy_escape(curl, urlStr, strlen(urlStr));
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    this->url = urlStr;
-}
-*/
 
 
 std::string HTTPReq::getUrl()
@@ -179,7 +176,6 @@ std::string HTTPReq::getResponse()
 {
     return response;
 }
-
 
 
 size_t HTTPReq::writeResponse(void *contents, size_t size, size_t nmemb, void *userp)

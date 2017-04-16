@@ -10,7 +10,7 @@
  ____________________________
  ****************************/
 
-WeatherWidget::WeatherWidget()
+WeatherWidget::WeatherWidget() : Widget(WEATHERWIDGET_NAME)
 {
     setRefreshInterval(10);
 }
@@ -27,7 +27,7 @@ WeatherWidget::WeatherWidget()
  * @param config
  */
 
-WeatherWidget::WeatherWidget(std::string config)
+WeatherWidget::WeatherWidget(std::string config) : Widget(WEATHERWIDGET_NAME)
 {
     nlohmann::json configJson = nlohmann::json::parse(config);
     setZipCode(configJson["configuration"]["zip"]);
@@ -41,10 +41,10 @@ WeatherWidget::WeatherWidget(std::string config)
  *
  * @param config
  */
-WeatherWidget::WeatherWidget(nlohmann::json config)
+WeatherWidget::WeatherWidget(nlohmann::json config) : Widget(WEATHERWIDGET_NAME)
 {
-    setZipCode(config["zip"]);
-    setRefreshInterval(config["refreshInterval"]);
+    setZipCode(config["configuration"]["zip"]);
+    setRefreshInterval(config["configuration"]["refreshInterval"]);
 }
 
 

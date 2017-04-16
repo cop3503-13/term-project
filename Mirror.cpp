@@ -1,6 +1,7 @@
 
 #include "Mirror.h"
 #include "widgets/WeatherWidget.h"
+#include "widgets/MovieWidget.h"
 #include <limits>
 #include <fstream>
 #include <iostream>
@@ -28,13 +29,22 @@ Mirror::Mirror(std::string configFileName)
     config = conf;
     data["name"] = config["name"];
 
+    if (config["widgets"].empty())
+    {
+        std::cout << "empty" << std::endl;
+    }
     for (auto& existingWidgetConf : config["widgets"])
     {
         Widget* widget;
         std::string name = existingWidgetConf["name"].get<std::string>();
         if (name == "Weather")
         {
-            widget = new WeatherWidget(existingWidgetConf["configuration"]);
+            widget = new WeatherWidget(existingWidgetConf);
+            selectedWidgets.push_back(widget);
+        }
+        if (name == "Movie")
+        {
+            widget = new MovieWidget(existingWidgetConf);
             selectedWidgets.push_back(widget);
         }
     }
