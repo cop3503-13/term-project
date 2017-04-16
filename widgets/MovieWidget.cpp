@@ -3,7 +3,6 @@
 void MovieWidget::config()
 {
     std::string buffer; //hold temp input
-    conf["name"] = MOVIEWIDGET_NAME;
 
     std::cout << "Movie Showtimes Widget : Configure Settings" << std::endl;
 
@@ -19,7 +18,7 @@ void MovieWidget::config()
         std::getline(std::cin, buffer);
     }
 
-    conf["configuration"]["api_key"] = buffer;
+    conf["api_key"] = buffer;
 
     ////// zip //////
 
@@ -33,11 +32,11 @@ void MovieWidget::config()
         std::getline(std::cin, buffer);
     }
 
-    conf["configuration"]["zip"] = buffer;
+    conf["zip"] = buffer;
 
     ////// numDays //////
 
-    conf["configuration"]["numDays"] = "1";
+    conf["numDays"] = "1";
 
     ////// DONE //////
 
@@ -131,10 +130,6 @@ JSON MovieWidget::refreshData()
         output.push_back(movie);
     }
 
-    JSON data = {
-            {"name", MOVIEWIDGET_NAME},
-            {"data", output }
-    };
     return output;
 }
 

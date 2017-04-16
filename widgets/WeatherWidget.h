@@ -17,7 +17,6 @@ public:
     WeatherWidget(nlohmann::json config);
 
     void config();
-    std::string getName();
     std::string getConfiguration();
     nlohmann::json getConfJson();
     nlohmann::json refreshData();

@@ -67,8 +67,8 @@ void Mirror::run()
                 std::string refreshed = widget->refresh();
                 if (refreshed != "")
                 {
-                    nlohmann::json json = nlohmann::json::parse(refreshed);
-                    updateDataWidget(json);
+                    nlohmann::json data_json = {{"name", widget->getName()}, {"data", nlohmann::json::parse(refreshed)}};
+                    updateDataWidget(data_json);
                     std::cout << "refreshed " + std::to_string(widget->getRefreshInterval()) << std::endl;
                     std::cout << data.dump(4);
                     publishData();
@@ -249,7 +249,9 @@ void Mirror::addWidget(std::string widgetName)
     }
 
     selectedWidgets.push_back(widget);
-    updateConfigWidget(widget->getConfJSON());
+    nlohmann::json configuration = {{"name", widget->getName()}, {"configuration", widget->getConfJSON()}};
+
+    updateConfigWidget(configuration);
 }
 
 

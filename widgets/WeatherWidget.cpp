@@ -59,7 +59,6 @@ WeatherWidget::WeatherWidget(nlohmann::json config) : Widget(WEATHERWIDGET_NAME)
  Public
  ___________________________
  ****************************/
- std::string getName(){ return "Weather"; };
 
 void WeatherWidget::config()
 {
@@ -92,11 +91,8 @@ std::string WeatherWidget::getConfiguration()
 nlohmann::json WeatherWidget::getConfJson()
 {
     nlohmann::json configurationJson = {
-            {"name", "Weather"},
-            {"configuration", {
                              {"zip", getZipCode()},
                              {"refreshInterval", getRefreshInterval()}
-                     }}
     };
 
     return configurationJson;
@@ -207,10 +203,5 @@ nlohmann::json WeatherWidget::transformResponse(nlohmann::json response)
             {"description", response["weather"][0]["description"]}
     };
 
-    nlohmann::json json = {
-            {"name", "Weather"},
-            {"data", data}
-    };
-
-    return json;
+    return data;
 };
