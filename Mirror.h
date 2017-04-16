@@ -29,7 +29,7 @@ private:
     bool exit = false;
     bool webfile_open = false;
     std::string name;
-    std::vector<std::string> const allWidgets = {"Weather", "Movies", "Stock", "Quote"};
+    std::vector<std::string> const allWidgets = {"Weather", "Movie"};
     nlohmann::json config = {{"name", ""}, {"widgets", nlohmann::json::array()}};
     nlohmann::json data = {{"name", ""}, {"widgets", nlohmann::json::array()}};
 

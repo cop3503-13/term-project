@@ -29,10 +29,6 @@ Mirror::Mirror(std::string configFileName)
     config = conf;
     data["name"] = config["name"];
 
-    if (config["widgets"].empty())
-    {
-        std::cout << "empty" << std::endl;
-    }
     for (auto& existingWidgetConf : config["widgets"])
     {
         Widget* widget;
@@ -247,13 +243,11 @@ void Mirror::addWidget(std::string widgetName)
     {
         widget = new WeatherWidget();
     }
-    else if (widgetName == "anotherWidget")
+    else if (widgetName == "Movie")
     {
-        //
+        widget = new MovieWidget();
     }
 
-
-    widget->config();
     selectedWidgets.push_back(widget);
     updateConfigWidget(widget->getConfJSON());
 }
@@ -276,14 +270,20 @@ nlohmann::json Mirror::getData()
 void Mirror::updateDataWidget(nlohmann::json widgetData)
 {
     bool found = false;
-    for (auto& widget : data["widgets"])
+
+    if (data["widgets"].size() > 0)
     {
-        if (widget["name"].get<std::string>() == widgetData["name"].get<std::string>())
+        for (nlohmann::json widget : data["widgets"])
         {
-            found = true;
-            widget = widgetData;
+
+            if (widget["name"].get<std::string>() == widgetData["name"].get<std::string>())
+            {
+                found = true;
+                widget = widgetData;
+            }
         }
     }
+
 
     if (!found)
         data["widgets"].push_back(widgetData);
@@ -292,8 +292,14 @@ void Mirror::updateDataWidget(nlohmann::json widgetData)
 void Mirror::updateConfigWidget(nlohmann::json widgetConfig)
 {
     bool found = false;
-    for (auto& existingWidgetConf : config["widgets"])
+
+    std::cout << "size: " << config["widgets"].size() << std::endl;
+    for (nlohmann::json& existingWidgetConf : config["widgets"])
     {
+        std::string existing_name = existingWidgetConf["name"].get<std::string>();
+        std::string name_to_add = widgetConfig["name"].get<std::string>();
+
+
         if (existingWidgetConf["name"].get<std::string>() == widgetConfig["name"].get<std::string>())
         {
             found = true;
@@ -303,6 +309,8 @@ void Mirror::updateConfigWidget(nlohmann::json widgetConfig)
 
     if (!found)
         config["widgets"].push_back(widgetConfig);
+
+    std::cout << "size now: " << config["widgets"].size() << std::endl;
 
 }
 
