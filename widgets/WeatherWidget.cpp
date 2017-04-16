@@ -44,8 +44,7 @@ WeatherWidget::WeatherWidget(std::string config) : Widget(WEATHERWIDGET_NAME)
  */
 WeatherWidget::WeatherWidget(nlohmann::json config) : Widget(WEATHERWIDGET_NAME)
 {
-    setZipCode(config["configuration"]["zip"]);
-    setRefreshInterval(config["configuration"]["refreshInterval"]);
+    conf = config;
 }
 
 
@@ -75,34 +74,19 @@ void WeatherWidget::config()
     }
 
     setZipCode(zip);
-}
-
-
-//returns string representation of configuration,
-//used to create config file
-std::string WeatherWidget::getConfiguration()
-{
-    nlohmann::json configurationJson = getConfJson();
-    return configurationJson.dump(4);
-}
-
-//returns json representation of configuration,
-//used to create config file
-nlohmann::json WeatherWidget::getConfJson()
-{
-    nlohmann::json configurationJson = {
-                             {"zip", getZipCode()},
-                             {"refreshInterval", getRefreshInterval()}
+    conf = {
+            {"zip", getZipCode()},
+            {"refreshInterval", getRefreshInterval()}
     };
-
-    return configurationJson;
 }
+
 
 //returns string representation of weather results
 //
 //Uses the openweather API and then transforms into subset of information
 nlohmann::json WeatherWidget::refreshData()
 {
+
     JSONHTTPReq req = JSONHTTPReq();
     std::string url = ENDPOINT + "?zip=" + getZipCode() + ",us&appid=" + APIKEY;
     req.setUrl(url);
@@ -168,7 +152,7 @@ bool WeatherWidget::validZipCode(std::string zip)
     nlohmann::json json = req.getJSONResponse();
     if (json["cod"] == "200" || json["cod"] == 200)
         return true;
-    if (json["cod"] == "404" || json["cod"] == 404)
+    if (json["cod"] == "404" || json["cod"] == 404 || json["cod"] == "500" || json["cod"] == 500)
         std::cout << "Error: bad zip code, " << json["message"] << std::endl;
     return false;
 }
@@ -176,13 +160,14 @@ bool WeatherWidget::validZipCode(std::string zip)
 
 std::string WeatherWidget::getZipCode()
 {
-    return zipcode;
+    return conf["zip"];
 }
 
 
 void WeatherWidget::setZipCode(std::string zip)
 {
     zipcode = zip;
+    conf["zip"] = zip;
 }
 
 /*****************

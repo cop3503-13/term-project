@@ -28,24 +28,28 @@ Mirror::Mirror(std::string configFileName)
     str >> conf;
     config = conf;
     data["name"] = config["name"];
-
-    for (auto& existingWidgetConf : config["widgets"])
+    if (config["widgets"].size() > 0)
     {
-        Widget* widget;
-        std::string name = existingWidgetConf["name"].get<std::string>();
-        if (name == "Weather")
+        for (nlohmann::json& existingWidgetConf : config["widgets"])
         {
-            widget = new WeatherWidget(existingWidgetConf);
-            selectedWidgets.push_back(widget);
-        }
-        if (name == "Movie")
-        {
-            widget = new MovieWidget(existingWidgetConf);
-            selectedWidgets.push_back(widget);
+            Widget* widget;
+            std::string name = existingWidgetConf["name"].get<std::string>();
+            if (name == "Weather")
+            {
+                widget = new WeatherWidget(existingWidgetConf["configuration"]);
+                selectedWidgets.push_back(widget);
+            }
+            if (name == "Movie")
+            {
+                widget = new MovieWidget(existingWidgetConf["configuration"]);
+                selectedWidgets.push_back(widget);
+            }
         }
     }
-    if (selectedWidgets.size() < 1)
+    else
+    {
         configure();
+    }
 };
 
 Mirror::~Mirror()
@@ -295,19 +299,27 @@ void Mirror::updateConfigWidget(nlohmann::json widgetConfig)
 {
     bool found = false;
 
-    std::cout << "size: " << config["widgets"].size() << std::endl;
-    for (nlohmann::json& existingWidgetConf : config["widgets"])
+    std::cout << "widgetConfig: " << widgetConfig.dump(4) << std::endl;
+
+    if (config["widgets"].size() > 0)
     {
-        std::string existing_name = existingWidgetConf["name"].get<std::string>();
+        std::cout << "existing config: " << config["widgets"].dump(4) << std::endl;
+        for (nlohmann::json& exist : config["widgets"])
+        {
+            std::cout << "name: " << exist["name"].get<std::string>() << std::endl;
+
+        std::string existing_name = exist["name"].get<std::string>();
         std::string name_to_add = widgetConfig["name"].get<std::string>();
 
 
-        if (existingWidgetConf["name"].get<std::string>() == widgetConfig["name"].get<std::string>())
+        if (existing_name == name_to_add)
         {
             found = true;
-            existingWidgetConf = widgetConfig;
+            exist = widgetConfig;
+        }
         }
     }
+
 
     if (!found)
         config["widgets"].push_back(widgetConfig);
