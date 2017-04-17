@@ -2,6 +2,7 @@
 #include "Mirror.h"
 #include "widgets/WeatherWidget.h"
 #include "widgets/MovieWidget.h"
+#include "widgets/StockWidget.h"
 #include "widgets/QuoteOfTheDayWidget.h"
 #include <limits>
 #include <fstream>
@@ -39,6 +40,11 @@ Mirror::Mirror(std::string configFileName)
             if (name == "Weather")
             {
                 widget = new WeatherWidget(existingWidgetConf["configuration"]);
+                selectedWidgets.push_back(widget);
+            }
+            if (name == "Stock")
+            {
+                widget = new StockWidget(existingWidgetConf["configuration"]);
                 selectedWidgets.push_back(widget);
             }
             if (name == "Movie")
@@ -290,6 +296,10 @@ void Mirror::addWidget(std::string widgetName)
     if (widgetName == "Weather")
     {
         widget = new WeatherWidget();
+    }
+    else if (widgetName == "Stock")
+    {
+        widget = new StockWidget();
     }
     else if (widgetName == "Movie")
     {
