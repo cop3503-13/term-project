@@ -142,6 +142,7 @@ nlohmann::json StockWidget::transformResponse(nlohmann::json response)
     std::string openPrice;
     std::string highPrice;
     std::string lowPrice;
+    std::string date;
 
     for (auto it = j.begin(); it != j.end(); ++it)
     {
@@ -150,13 +151,16 @@ nlohmann::json StockWidget::transformResponse(nlohmann::json response)
         openPrice = val["1. open"];
         highPrice = val["2. high"];
         lowPrice = val["3. low"];
+        date = it.key();
     }
 
     nlohmann::json data = {
-            {"Closing Price:",  closePrice},
-            {"Opening Price:",  openPrice},
-            {"High Price:",     highPrice},
-            {"Low Price:",      lowPrice}
+            {"Closing Price",  closePrice},
+            {"Opening Price",  openPrice},
+            {"High Price",     highPrice},
+            {"Low Price",      lowPrice},
+            {"date", date},
+            {"symbol", conf["symbol"]}
     };
 
     return data;
