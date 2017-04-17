@@ -54,6 +54,8 @@ void HTTPReq::init(std::string url,
         // follow redirects
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
+        setUrl(url);
+
         setVerbose(verbose);
         setErrOutput(errOutput);
     }
@@ -110,6 +112,7 @@ void HTTPReq::send()
     time(&lastSentTimestamp); // reset send intent time
 
     // do request!
+    response.clear(); // clean before
     responseCode = curl_easy_perform(curl);
 
     // check for errors

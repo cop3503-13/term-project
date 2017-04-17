@@ -1,7 +1,8 @@
-#include "date.h"
+#include "../include/date.h"
 
 const std::unordered_map<std::string, std::string> Date::formats = {
         {"full", "%Y-%m-%dT%H:%M:%SZ"},
+        {"minute-resolution", "%Y-%m-%dT%H:%MZ"},
         {"date", "%Y-%m-%d"},
         {"time", "%H:%M:%S"},
 };

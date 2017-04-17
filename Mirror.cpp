@@ -3,6 +3,7 @@
 #include "widgets/WeatherWidget.h"
 #include "widgets/MovieWidget.h"
 #include "widgets/StockWidget.h"
+#include "widgets/NewsWidget.h"
 #include "widgets/QuoteOfTheDayWidget.h"
 #include <limits>
 #include <fstream>
@@ -40,6 +41,11 @@ Mirror::Mirror(std::string configFileName)
             if (name == "Weather")
             {
                 widget = new WeatherWidget(existingWidgetConf["configuration"]);
+                selectedWidgets.push_back(widget);
+            }
+            if (name == "News")
+            {
+                widget = new NewsWidget(existingWidgetConf["configuration"]);
                 selectedWidgets.push_back(widget);
             }
             if (name == "Stock")
@@ -293,6 +299,10 @@ void Mirror::addWidget()
 void Mirror::addWidget(std::string widgetName)
 {
     Widget* widget;
+    if (widgetName == "News")
+    {
+        widget = new NewsWidget();
+    }
     if (widgetName == "Weather")
     {
         widget = new WeatherWidget();

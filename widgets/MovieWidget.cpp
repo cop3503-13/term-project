@@ -8,9 +8,9 @@ void MovieWidget::config()
 
     ////// api_key //////
 
-    std::cout << "Please enter an OnConnect API Key:" << std::endl;
-    std::getline(std::cin, buffer);
-    //buffer = "ssksbm4f8gr6ws6ua3vtaugf";
+    //std::cout << "Please enter an OnConnect API Key:" << std::endl;
+    //std::getline(std::cin, buffer);
+    buffer = "ssksbm4f8gr6ws6ua3vtaugf";
 
     while(!isAPIkeyValid(buffer))
     {
