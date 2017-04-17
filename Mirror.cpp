@@ -5,6 +5,7 @@
 #include "widgets/StockWidget.h"
 #include "widgets/NewsWidget.h"
 #include "widgets/QuoteOfTheDayWidget.h"
+#include "widgets/SportsWidget.h"
 #include <limits>
 #include <fstream>
 #include <iostream>
@@ -46,6 +47,11 @@ Mirror::Mirror(std::string configFileName)
             if (name == "News")
             {
                 widget = new NewsWidget(existingWidgetConf["configuration"]);
+                selectedWidgets.push_back(widget);
+            }
+            if (name == "Sports")
+            {
+                widget = new SportsWidget(existingWidgetConf["configuration"]);
                 selectedWidgets.push_back(widget);
             }
             if (name == "Stock")
@@ -250,6 +256,25 @@ void Mirror::removeWidget(std::string widgetName)
             config["widgets"].erase(i);
     }
 
+    for (size_t i = 0; i < data["widgets"].size(); ++i)
+    {
+        if (data["widgets"][i]["name"].get<std::string>() == widgetName)
+            data["widgets"].erase(i);
+    }
+    publishData();
+
+    for (size_t i = 0; i < selectedWidgets.size(); ++i)
+    {
+        Widget* w = selectedWidgets[i];
+        w->setLastRefreshed(0);
+        if (w->getName() == widgetName)
+            selectedWidgets.erase(selectedWidgets.begin() + i);
+    }
+
+    std::cout << "\nRemaining widgets: \n";
+    for (auto w : selectedWidgets)
+        std::cout << "\t" + w->getName() << std::endl;
+
     publishConfig();
 }
 
@@ -306,6 +331,10 @@ void Mirror::addWidget(std::string widgetName)
     if (widgetName == "Weather")
     {
         widget = new WeatherWidget();
+    }
+    if (widgetName == "Sports")
+    {
+        widget = new SportsWidget();
     }
     else if (widgetName == "Stock")
     {
@@ -465,9 +494,9 @@ void Mirror::publishData()
             "                $scope.name = data[\"name\"];\n"
             "                $scope.widgets = data[\"widgets\"];\n"
             "                $scope.date = function() {return new Date() };\n"
-            "//                $interval(function(){\n"
-            "//                    document.location.reload()\n"
-            "//                }, 1000);\n"
+            "                $interval(function(){\n"
+            "                    document.location.reload()\n"
+            "                }, 1000);\n"
             "            });\n"
             "        })()\n"
             "    </script>\n"
@@ -500,81 +529,153 @@ void Mirror::publishData()
             "            margin-bottom: 2px;\n"
             "            margin-top: 2px;\n"
             "        }\n"
-            "        blockquote small {\n"
+            "        .author {\n"
             "            float: right;\n"
+            "        }\n"
+            "        .news-author {\n"
+            "            margin-left: 10px;\n"
             "        }\n"
             "        .theater-info{\n"
             "            margin-left: 25px;\n"
             "        }\n"
-            "        .movie{\n"
+            "        .section{\n"
             "            margin-top: 10px;\n"
             "            margin-bottom: 5px;\n"
             "        }\n"
+            "        .news-type{\n"
+            "            text-transform: capitalize;\n"
+            "        }\n"
+            "        .top{\n"
+            "            width: 100%;\n"
+            "            height: 50px;\n"
+            "            margin-bottom: 20px;\n"
+            "            padding-left: 20px;\n"
+            "        }\n"
+            "\n"
+            "        .top .greeting{ float: left;}\n"
+            "        .top .datetime{\n"
+            "            padding-right: 20px;\n"
+            "            float: right;\n"
+            "        }\n"
+            "        .widgets-container{\n"
+            "            width: 100%;\n"
+            "            height: 100%;\n"
+            "        }\n"
+            "        .widget:after{\n"
+            "            content: \"\";\n"
+            "            display: table;\n"
+            "            clear: both;\n"
+            "        }\n"
+            "\n"
             "    </style>\n"
             "</head>\n"
             "<body ng-controller=\"MirrorCtrl\">\n"
-            "<h1>Hello {{name}}</h1>\n"
-            "<div class=\"widget\" ng-repeat=\"widget in widgets\">\n"
-            "    <div ng-if=\"widget.name == 'Time'\">\n"
-            "        <script> date = new Date()</script>\n"
-            "        <div>{{ date() | date:''}}</div>\n"
-            "        <div>{{ date() | date:'h:mm a' }}</div>\n"
+            "<div class=\"top\">\n"
+            "    <h1 class=\"greeting\">Hello {{name}}</h1>\n"
+            "    <script> date = new Date()</script>\n"
+            "    <div class=\"datetime\">\n"
+            "        <h1>{{ date() | date:''}}</h1>\n"
+            "        <h2>{{ date() | date:'h:mm a' }}</h2>\n"
             "    </div>\n"
-            "    <!---->\n"
-            "    <!--WEATHER-->\n"
-            "    <!---->\n"
-            "    <h2 ng-if=\"widget.name == 'Weather'\">Weather</h2>\n"
-            "    <div ng-if=\"widget.name == 'Weather'\">\n"
-            "        <div>\n"
-            "            <h3 ng-bind=\"widget.data.city\"></h3>\n"
-            "            <div>Current conditions: {{widget.data.description}} - {{widget.data.temp}}&deg; F</div>\n"
-            "        </div>\n"
-            "    </div>\n"
-            "    <!---->\n"
-            "    <!--QUOTE-->\n"
-            "    <!---->\n"
+            "</div>\n"
+            "<div style=\"clear:both;\"></div>\n"
+            "<div class=\"widgets-container\">\n"
+            "    <div class=\"widget\" ng-repeat=\"widget in widgets\">\n"
             "\n"
-            "    <h2 ng-if=\"widget.name == 'QuoteOfTheDay'\">Quote of the day</h2>\n"
-            "    <div ng-if=\"widget.name == 'QuoteOfTheDay'\">\n"
-            "        <div>\n"
-            "            <blockquote>\n"
-            "                <div><em>{{widget.data.quote}}</em></div>\n"
-            "                <small>-{{widget.data.author}}</small>\n"
-            "            </blockquote>\n"
-            "        </div>\n"
-            "    </div>\n"
-            "    <!---->\n"
-            "    <!--STOCKS-->\n"
-            "    <!---->\n"
-            "\n"
-            "    <div ng-if=\"widget.name == 'Stocks'\">\n"
-            "        <div ng-repeat=\"stock in widget.data\">\n"
-            "            <h3 ng-bind=\"stock.label\"></h3>\n"
-            "            <div>${{stock.data}}</div>\n"
-            "        </div>\n"
-            "    </div>\n"
-            "    <!---->\n"
-            "    <!--MOVIE-->\n"
-            "    <!---->\n"
-            "\n"
-            "    <h2 ng-if=\"widget.name == 'Movie'\">Movie Listings</h2>\n"
-            "    <div ng-if=\"widget.name == 'Movie'\">\n"
-            "        <div class=\"movie\" ng-repeat=\"movie in widget.data\">\n"
-            "            <h3 ng-bind=\"movie.title\"></h3>\n"
-            "            <div class=\"movie-info\">\n"
-            "                <span ng-if=\"movie.rating\">Rated: {{movie.rating}}</span>\n"
-            "                <span ng-if=\"movie.runTime\">Runtime: {{movie.runTime}}</span>\n"
-            "            </div>\n"
-            "            <div class=\"theater-info\" ng-repeat=\"(theater, showtimes) in movie.showtimes\">\n"
-            "                <h4>{{theater}}</h4>\n"
-            "                <div ng-if=\"!showtimes.empty()\">Showtimes: {{showtimes.join(\", \")}}</div>\n"
+            "        <!---->\n"
+            "        <!--WEATHER-->\n"
+            "        <!---->\n"
+            "        <h2 ng-if=\"widget.name == 'Weather'\">Weather</h2>\n"
+            "        <div ng-if=\"widget.name == 'Weather'\">\n"
+            "            <div>\n"
+            "                <h3 ng-bind=\"widget.data.city\"></h3>\n"
+            "                <div>Current conditions: {{widget.data.description}} - {{widget.data.temp}}&deg; F</div>\n"
             "            </div>\n"
             "        </div>\n"
-            "    </div>\n"
-            "    <div ng-if=\"widget.name == 'News'\">\n"
+            "        <!---->\n"
+            "        <!--QUOTE-->\n"
+            "        <!---->\n"
+            "\n"
+            "        <h2 ng-if=\"widget.name == 'QuoteOfTheDay'\">Quote of the day</h2>\n"
+            "        <div ng-if=\"widget.name == 'QuoteOfTheDay'\">\n"
+            "            <div>\n"
+            "                <blockquote>\n"
+            "                    <div><em>{{widget.data.quote}}</em></div>\n"
+            "                    <small class=\"author\">-{{widget.data.author}}</small>\n"
+            "                </blockquote>\n"
+            "            </div>\n"
+            "        </div>\n"
+            "        <!---->\n"
+            "        <!--STOCKS-->\n"
+            "        <!---->\n"
+            "        <h2 ng-if=\"widget.name == 'Stock'\">Stock price</h2>\n"
+            "        <div ng-if=\"widget.name == 'Stock'\">\n"
+            "            <h3>{{widget.data.symbol}}</h3>\n"
+            "            <em>Prices as of {{widget.data.date}}</em>        <dl>\n"
+            "            <dt>Opening Price</dt>\n"
+            "            <dd>${{ widget.data[\"Opening Price\"] }}</dd>\n"
+            "            <dt>Low Price</dt>\n"
+            "            <dd>${{ widget.data[\"Opening Price\"] }}</dd>\n"
+            "            <dt>High Price</dt>\n"
+            "            <dd>${{ widget.data[\"Opening Price\"] }}</dd>\n"
+            "            <dt>Closing Price</dt>\n"
+            "            <dd>${{ widget.data[\"Opening Price\"] }}</dd>\n"
+            "        </dl>\n"
+            "        </div>\n"
+            "\n"
+            "        <!---->\n"
+            "        <!--Sports-->\n"
+            "        <!---->\n"
+            "\n"
+            "        <h2 ng-if=\"widget.name == 'Sports'\">Sports TV Listings</h2>\n"
+            "        <div ng-if=\"widget.name == 'Sports'\">\n"
+            "            <div class=\"section\" ng-repeat=\"event in widget.data\">\n"
+            "                <h3 ng-bind=\"event.title\"></h3>\n"
+            "                <h4 ng-bind=\"event.eventTitle\"></h4>\n"
+            "                <div ng-if=\"!event.channels.empty()\">Channels: {{event.channels.join(\", \")}}</div>\n"
+            "            </div>\n"
+            "        </div>\n"
+            "\n"
+            "\n"
+            "        <!---->\n"
+            "        <!--News-->\n"
+            "        <!---->\n"
+            "\n"
+            "        <h2 ng-if=\"widget.name == 'News'\">News</h2>\n"
+            "        <div ng-if=\"widget.name == 'News'\">\n"
+            "            <div class=\"section\" ng-repeat=\"(newsType, headlines) in widget.data.news\">\n"
+            "                <h3 class=\"news-type\" ng-bind=\"newsType\"></h3>\n"
+            "                <div ng-repeat=\"headline in headlines\">\n"
+            "                    <h4 ng-bind=\"headline.title\"></h4>\n"
+            "                    <small class=\"news-author\">{{headline.byline}}</small>\n"
+            "                    <blockquote><div><em>{{headline.abstract}}</em></div></blockquote>\n"
+            "                </div>\n"
+            "            </div>\n"
+            "        </div>\n"
+            "\n"
+            "\n"
+            "        <!---->\n"
+            "        <!--MOVIE-->\n"
+            "        <!---->\n"
+            "\n"
+            "        <h2 ng-if=\"widget.name == 'Movie'\">Movie Listings</h2>\n"
+            "        <div ng-if=\"widget.name == 'Movie'\">\n"
+            "            <div class=\"section\" ng-repeat=\"movie in widget.data\">\n"
+            "                <h3 ng-bind=\"movie.title\"></h3>\n"
+            "                <div class=\"movie-info\">\n"
+            "                    <span ng-if=\"movie.rating\">Rated: {{movie.rating}}</span>\n"
+            "                    <span ng-if=\"movie.runTime\">Runtime: {{movie.runTime}}</span>\n"
+            "                </div>\n"
+            "                <div class=\"theater-info\" ng-repeat=\"(theater, showtimes) in movie.showtimes\">\n"
+            "                    <h4>{{theater}}</h4>\n"
+            "                    <div ng-if=\"!showtimes.empty()\">Showtimes: {{showtimes.join(\", \")}}</div>\n"
+            "                </div>\n"
+            "            </div>\n"
+            "        </div>\n"
             "\n"
             "    </div>\n"
             "</div>\n"
+            "\n"
             "<h2>{{data.foo}}</h2>\n"
             "</body>\n"
             "</html>";
