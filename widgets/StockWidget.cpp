@@ -52,6 +52,8 @@ void StockWidget::config()
 
     conf = getConfigurationJson();
 
+    std::cout << "Stock widget configured, thank you.\n\n";
+
 }
 
 std::string StockWidget::getConfiguration()
