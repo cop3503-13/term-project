@@ -92,7 +92,5 @@ std::string Common::trim(const std::string& s, const std::string& w)
 
     size_t end = s.find_last_not_of(w);
 
-    std::cout << "TEST ->" << s.substr(begin, end - begin + 1) << "|" << std::endl;
-
     return s.substr(begin, end - begin + 1);
 }
