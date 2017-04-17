@@ -2,6 +2,7 @@
 #include "Mirror.h"
 #include "widgets/WeatherWidget.h"
 #include "widgets/MovieWidget.h"
+#include "widgets/StockWidget.h"
 #include "widgets/QuoteOfTheDayWidget.h"
 #include <limits>
 #include <fstream>
@@ -41,6 +42,11 @@ Mirror::Mirror(std::string configFileName)
                 widget = new WeatherWidget(existingWidgetConf["configuration"]);
                 selectedWidgets.push_back(widget);
             }
+            if (name == "Stock")
+            {
+                widget = new StockWidget(existingWidgetConf["configuration"]);
+                selectedWidgets.push_back(widget);
+            }
             if (name == "Movie")
             {
                 widget = new MovieWidget(existingWidgetConf["configuration"]);
@@ -68,10 +74,18 @@ Mirror::~Mirror()
 
 void Mirror::run()
 {
+    int running = 0;
     while (!exit)
     {
         if (!keyboard_hit())
         {
+            if (running != 2){
+                for(int i = 0; i < 100; ++i)
+                    std::cout << " \n";
+                std::cout << "Running mirror... press enter to continue";
+                running++;
+            }
+
             for(size_t i = 0; i < selectedWidgets.size(); ++i)
             {
                 Widget* widget = selectedWidgets[i];
@@ -80,14 +94,14 @@ void Mirror::run()
                 {
                     nlohmann::json data_json = {{"name", widget->getName()}, {"data", nlohmann::json::parse(refreshed)}};
                     updateDataWidget(data_json);
-                    std::cout << "refreshed " + std::to_string(widget->getRefreshInterval()) << std::endl;
-                    std::cout << data.dump(4);
                     publishData();
                 }
             }
         }
         else
         {
+            running = 0;
+            clearCin();
             configure();
         }
     }
@@ -282,6 +296,10 @@ void Mirror::addWidget(std::string widgetName)
     if (widgetName == "Weather")
     {
         widget = new WeatherWidget();
+    }
+    else if (widgetName == "Stock")
+    {
+        widget = new StockWidget();
     }
     else if (widgetName == "Movie")
     {
@@ -563,6 +581,8 @@ void Mirror::publishData()
         std::string command = "xdg-open " + filename + " &";
         system(command.c_str());
         webfile_open = true;
+        std::cout << "\nOpening browser... Please wait \n\n\n";
+        sleep(2);
     }
 }
 
