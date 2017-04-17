@@ -41,6 +41,13 @@ void StockWidget::config()
     std::cout << "Please enter a stock symbol: " << std::endl;
     std::cout << "Symbol: ";
     std::getline(std::cin, sym);
+    while(!validateSymbol(sym))
+    {
+        std::cout << "Please enter a stock symbol: " << std::endl;
+        std::cout << "Symbol: " << std::endl;
+        std::getline(std::cin, sym);
+    }
+
     setSymbol(sym);
 
     conf = getConfigurationJson();
@@ -86,6 +93,26 @@ std::string StockWidget::getDailyUrl(std::string sym)
     return ENDPOINT + "function=" + function + "&symbol=" + sym +
            "&apikey=" + APIKEY;
 }
+
+bool StockWidget::validateSymbol(std::string sym)
+{
+    JSONHTTPReq req = JSONHTTPReq();
+    std::string url = "";
+    url = getDailyUrl(sym);
+    req.setUrl(url);
+    req.send();
+    nlohmann::json json = req.getJSONResponse();
+    bool error = true;
+    try{
+        json.at("Error Message");
+        std::cout << "Invalid Stock Symbol" << std::endl;
+    }catch(nlohmann::json::out_of_range& e){
+        error = false;
+    }
+
+    return !error;
+}
+
 
 std::string StockWidget::getSectorUrl()
 {

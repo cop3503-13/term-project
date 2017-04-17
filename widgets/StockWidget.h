@@ -45,7 +45,7 @@ private:
     std::string getDailyUrl(std::string sym);
     std::string getSectorUrl();
     void configureSymbol();
-    //bool validSymbol();
+    bool validateSymbol(std::string sym);
 
 
 };
