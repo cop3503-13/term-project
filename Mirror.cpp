@@ -256,6 +256,13 @@ void Mirror::removeWidget(std::string widgetName)
             config["widgets"].erase(i);
     }
 
+    for (size_t i = 0; i < data["widgets"].size(); ++i)
+    {
+        if (data["widgets"][i]["name"].get<std::string>() == widgetName)
+            data["widgets"].erase(i);
+    }
+    publishData();
+
     for (size_t i = 0; i < selectedWidgets.size(); ++i)
     {
         Widget* w = selectedWidgets[i];
