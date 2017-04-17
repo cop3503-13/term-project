@@ -6,6 +6,7 @@ const std::unordered_map<std::string, const std::regex> Valid::rules = {
         {"int", std::regex("^\\d+$")},
         {"csvInts", std::regex("^\\d+([,]\\d+)*$")},
         {"csvIntsSpc", std::regex("^\\s*\\d+\\s*([,]\\s*\\d+\\s*)*$")},
+        {"csvIntsSpc1-5", std::regex("^\\s*[1-5]\\s*([,]\\s*[1-5]+\\s*)*$")},
         {"csvAlpha", std::regex("^[a-zA-Z]+([,][a-zA-Z]+)*$")},
         {"csvAlphaSpc", std::regex("^\\s*[a-zA-Z]+\\s*([,]\\s*([a-zA-Z]|\\s)+\\s*)*$")},
 };
