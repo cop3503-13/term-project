@@ -7,72 +7,72 @@
 #include <time.h>
 #include "curl/curl.h"
 
-class HTTPReq 
+class HTTPReq
 {
-    public :
-    	
-        HTTPReq();
-        
-        HTTPReq(const bool verbose);
-        
-        HTTPReq(const std::string url);
+public :
 
-        HTTPReq(const std::string url, 
-                const bool verbose);
-        
-        HTTPReq(const std::string url, 
-                const bool verbose, 
-                const bool errOutput);
+    HTTPReq();
 
-        ~HTTPReq();
+    HTTPReq(const bool verbose);
 
-        std::string getResponse();
-        std::string getUrl();
-        void setUrl(const std::string& url);
-        void send();
+    HTTPReq(const std::string url);
 
-        /* curl verbose output and
-           errors sent to stderr */
+    HTTPReq(const std::string url,
+            const bool verbose);
 
-        void setVerbose(const bool verbose);
-        void setErrOutput(const bool errOutput);
-        bool getVerbose();
-        bool getErrOutput();
-		
-		bool isOk();
-		const long getHTTPStatus();
+    HTTPReq(const std::string url,
+            const bool verbose,
+            const bool errOutput);
 
-        /* get timestamp for the last request
-           or the last ok response */
+    ~HTTPReq();
 
-        time_t getLastResponseTimestamp();
-        time_t getLastSentTimestamp();
-        
-    private :
-        
-        CURL *curl;                     // curl handler initialized by curl_easy_init
-        CURLcode responseCode; 	        // curl return code
+    std::string getResponse();
+    std::string getUrl();
+    void setUrl(const std::string& url);
+    void send();
 
-        std::string url;		        // url target for the request
-        std::string response;           // response string from request 
+    /* curl verbose output and
+       errors sent to stderr */
 
-        char errbuf[CURL_ERROR_SIZE];   // buffer to store errors
-        bool verbose;                   // verbose curl output
-        bool errOutput;                 // write errors to stderr
+    void setVerbose(const bool verbose);
+    void setErrOutput(const bool errOutput);
+    bool getVerbose();
+    bool getErrOutput();
 
-        time_t lastSentTimestamp;       // when the last sent intent happened
-        time_t lastResponseTimestamp;   // when the last ok response happened
+    bool isOk();
+    const long getHTTPStatus();
 
-        /* initializes and sets curl options */
+    /* get timestamp for the last request
+       or the last ok response */
 
-        void init(std::string url = "", 
-                  bool verbose = false, 
-                  bool errOutput = true);
+    time_t getLastResponseTimestamp();
+    time_t getLastSentTimestamp();
 
-        /* callback function member provided to curl, writes
-		   the response in the response string field */
-        
-        static size_t writeResponse(void *contents, size_t size, size_t nmemb, void *userp);
+private :
+
+    CURL *curl;                     // curl handler initialized by curl_easy_init
+    CURLcode responseCode; 	        // curl return code
+
+    std::string url;		        // url target for the request
+    std::string response;           // response string from request
+
+    char errbuf[CURL_ERROR_SIZE];   // buffer to store errors
+    bool verbose;                   // verbose curl output
+    bool errOutput;                 // write errors to stderr
+
+    time_t lastSentTimestamp;       // when the last sent intent happened
+    time_t lastResponseTimestamp;   // when the last ok response happened
+
+    /* initializes and sets curl options */
+
+    void init(std::string url = "",
+              bool verbose = false,
+              bool errOutput = true);
+
+    /* callback function member provided to curl, writes
+       the response in the response string field */
+
+    static size_t writeResponse(void *contents, size_t size, size_t nmemb, void *userp);
 };
 
 #endif //HTTPREQ_H
