@@ -13,7 +13,7 @@
 WeatherWidget::WeatherWidget() : Widget(WEATHERWIDGET_NAME)
 {
     config();
-    setRefreshInterval(10);
+    setRefreshInterval(600);
 }
 
 /************

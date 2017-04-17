@@ -1,5 +1,6 @@
 #include "common.h"
 #include <iostream>
+#include <algorithm>
 
 List& Common::pushList(List& target, const List& source)
 {
@@ -38,4 +39,11 @@ std::string Common::join(const List& list, const std::string& delimiter)
     }
 
     return ss.str();
+}
+
+bool Common::contains(const List& list, const std::string& search)
+{
+    if (std::find(list.begin(), list.end(), search) != list.end())
+        return true;
+    return false;
 }

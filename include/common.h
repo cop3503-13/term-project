@@ -15,6 +15,7 @@ public :
     static List& pushList(List& target, const List& source);
     static std::string join(const List& list, const std::string& delimiter = ",");
     static List split(const std::string& str, const std::string& delimiter = ",");
+    static bool contains(const List& list, const std::string& search);
 };
 
 #endif //COMMON_H

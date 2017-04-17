@@ -29,7 +29,7 @@ private:
     bool exit = false;
     bool webfile_open = false;
     std::string name;
-    std::vector<std::string> const allWidgets = {"Weather", "Movie"};
+    std::vector<std::string> const allWidgets = {"Weather", "Movie", "QuoteOfTheDay"};
     nlohmann::json config = {{"name", ""}, {"widgets", nlohmann::json::array()}};
     nlohmann::json data = {{"name", ""}, {"widgets", nlohmann::json::array()}};
 
@@ -51,28 +51,19 @@ private:
     int displayMainOptions();
 
 
-    /*****************************
-     * Display a list of selected/configured widgets
-     * use this when user wants to  delete or edit
-     */
-    void displayExistingWidgets();
-
-
-    /********************************
-     * Display a list of widgets able to be added
-     * For example, some widgets might be able to be
-     * added more than once, but others only once,
-     * so only display the correct widgets;
-     */
-    void displayAddableWidgets();
-
-
     /*************************
      * shows the available widgets and asks for a choice
      */
     void addWidget();
 
+    /********************
+     * shows configured widgets and asks which to remove
+     */
+    void removeWidget();
+    void removeWidget(std::string widgetName);
+
     void listChosenWidgets();
+
 
 
     /**********************************
@@ -84,15 +75,6 @@ private:
 
 
 
-    /*****************************
-     * Basically, get the json results of each selectedWidget
-     * and combine to make a big json object
-     * foreach widget in selectedWidgets
-     *                  widget.refreshData()
-     *
-     * @return json results of ALL selectedwidgets
-     */
-    nlohmann::json getData();
 
 
     /*****************************************
@@ -107,6 +89,18 @@ private:
 
     void updateDataWidget(nlohmann::json widgetData);
     void updateConfigWidget(nlohmann::json widgetConfig);
+
+
+    /**********************
+     * The following two return vectors of widget names
+     * that have been chosen/configured and not yet chosen/configured
+     * @return {"widgetName", "widgetName", ...}
+     */
+    std::vector<std::string> getChosenWidgets();
+    std::vector<std::string> getAvailableWidgets();
+
+
+    bool widgetIsConfigured(std::string widgetName);
 
     /**
      Linux (POSIX) implementation of _kbhit().

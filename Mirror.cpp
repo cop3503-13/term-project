@@ -2,10 +2,12 @@
 #include "Mirror.h"
 #include "widgets/WeatherWidget.h"
 #include "widgets/MovieWidget.h"
+#include "widgets/QuoteOfTheDayWidget.h"
 #include <limits>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include "include/common.h"
 
 /****************
  * Static Constants
@@ -42,6 +44,11 @@ Mirror::Mirror(std::string configFileName)
             if (name == "Movie")
             {
                 widget = new MovieWidget(existingWidgetConf["configuration"]);
+                selectedWidgets.push_back(widget);
+            }
+            if (name == "QuoteOfTheDay")
+            {
+                widget = new QuoteOfTheDayWidget(existingWidgetConf["configuration"]);
                 selectedWidgets.push_back(widget);
             }
         }
@@ -122,13 +129,12 @@ void Mirror::configure() {
                 listChosenWidgets();
                 break;
             case 4:
+                removeWidget();
                 break;
             case 5:
-                break;
-            case 6:
                 moveOn = true;
                 break;
-            case 7:
+            case 6:
                 exitMirror();
                 moveOn = true;
                 break;
@@ -157,14 +163,13 @@ int Mirror::displayMainOptions()
     std::string message = "What would you like to do? \n";
     message += "\t 1: Add a widget to your mirror \n";
     message += "\t 2: Change name\n";
-    if (selectedWidgets.size() > 0)
+    if (config["widgets"].size() > 0)
     {
         message += "\t 3: List your chosen widgets\n";
-        message += "\t 4: Remove a chosen widget\n";
-        message += "\t 5: Edit a chosen widget\n\n";
-        message += "\t 6: Run the Mirror\n";
+        message += "\t 4: Remove a chosen widget\n\n";
+        message += "\t 5: Run the Mirror\n";
     }
-    message += "\t 7: Exit\n";
+    message += "\t 6: Exit\n";
 
 
     std::cout << "Hi " + data["name"].get<std::string>() << std::endl << message;
@@ -173,7 +178,7 @@ int Mirror::displayMainOptions()
     int choice;
     std::cin >> dchoice;
     choice = (int)dchoice;
-    while (std::cin.fail() || choice < 0 || choice > 7 || choice != dchoice)
+    while (std::cin.fail() || (!std::cin.eof() && std::cin.peek() != 10) || choice < 1 || choice > 6 || choice != dchoice)
     {
         std::cout << "Error you must make a valid choice\n";
         std::cout << message;
@@ -186,51 +191,82 @@ int Mirror::displayMainOptions()
     return choice;
 }
 
-void Mirror::addWidget()
+void Mirror::removeWidget()
 {
-    std::string choice;
+    std::vector<std::string> chosenWidgets = getChosenWidgets();
 
-    std::cout << "Which widget would you like to add from the following list?" << std::endl;
-    displayAddableWidgets();
-
-    std::cin >> choice;
-    clearCin();
-    while (std::find(allWidgets.begin(), allWidgets.end(), choice) == allWidgets.end())
+    if (chosenWidgets.size() < 1)
     {
-        std::cout << "Invalid widget choice, please try again" << std::endl;
-        std::cout << "Which widget would you like to add from the following list?" << std::endl;
-        displayAddableWidgets();
+        std::cout << "There are no widgets to remove, please choose another option." << std::endl << std::endl;
+    }
+    else
+    {
+        std::string choice;
+        std::string cancelMsg = "Type \"cancel\" to go back\n\n";
+        std::string choicesMsg = "Which widget would you like to remove from your Magic Mirror?\n\t" + Common::join(chosenWidgets, "\n\t");
+
+        std::cout << choicesMsg << std::endl << cancelMsg;
 
         std::cin >> choice;
         clearCin();
+
+        while(!Common::contains(chosenWidgets, choice))
+        {
+            std::cout << "Invalid widget choice, please try again" << std::endl;
+            std::cout << choicesMsg << std::endl << cancelMsg;
+            std::cin >> choice;
+            clearCin();
+        }
+        if (choice != "cancel")
+            removeWidget(choice);
     }
-    addWidget(choice);
 }
 
-
-/*****************************
- * Display a list of selected/configured widgets
- * use this when user wants to  delete or edit
- */
-void Mirror::displayExistingWidgets()
+void Mirror::removeWidget(std::string widgetName)
 {
-
-}
-
-
-/********************************
- * Display a list of widgets able to be added
- * For example, some widgets might be able to be
- * added more than once, but others only once,
- * so only display the correct widgets;
- */
-void Mirror::displayAddableWidgets()
-{
-    std::string widgetOptions = "";
-
-    for (auto widgetName : allWidgets)
+    for (size_t i = 0; i < config["widgets"].size(); ++i)
     {
-        std::cout << "\t" + widgetName << std::endl;
+        if (config["widgets"][i]["name"].get<std::string>() == widgetName)
+            config["widgets"].erase(i);
+    }
+
+    publishConfig();
+}
+
+void Mirror::addWidget()
+{
+
+    std::vector<std::string> availableWidgets = getAvailableWidgets();
+    if (availableWidgets.size() < 1)
+    {
+        std::cout << "You have configured all available widgets, please choose another option." << std::endl << std::endl;
+    }
+    else
+    {
+        std::string choice;
+        std::string cancelMsg = "Type \"cancel\" to go back\n\n";
+        std::string choicesMsg = "Which widget would you like to add from the following list?\n\t" + Common::join(availableWidgets, "\n\t");
+
+        std::cout << choicesMsg << std::endl << cancelMsg;
+
+        std::cin >> choice;
+        clearCin();
+        while (!Common::contains(availableWidgets, choice) && choice != "cancel")
+        {
+            if (widgetIsConfigured(choice))
+            {
+                std::cout << "This widget is already configured, if you want to re-configure, please remove it first." <<std::endl;
+            }
+            else
+            {
+                std::cout << "Invalid widget choice, please try again" << std::endl;
+            }
+            std::cout << choicesMsg << std::endl << cancelMsg;
+            std::cin >> choice;
+            clearCin();
+        }
+        if (choice != "cancel")
+            addWidget(choice);
     }
 }
 
@@ -251,6 +287,10 @@ void Mirror::addWidget(std::string widgetName)
     {
         widget = new MovieWidget();
     }
+    else if (widgetName == "QuoteOfTheDay")
+    {
+        widget = new QuoteOfTheDayWidget();
+    }
 
     selectedWidgets.push_back(widget);
     nlohmann::json configuration = {{"name", widget->getName()}, {"configuration", widget->getConfJSON()}};
@@ -260,18 +300,6 @@ void Mirror::addWidget(std::string widgetName)
 
 
 
-/*****************************
- * Basically, get the json results of each selectedWidget
- * and combine to make a big json object
- * foreach widget in selectedWidgets
- *                  widget.refreshData()
- *
- * @return json results of ALL selectedwidgets
- */
-nlohmann::json Mirror::getData()
-{
-    return data;
-}
 
 void Mirror::updateDataWidget(nlohmann::json widgetData)
 {
@@ -299,24 +327,18 @@ void Mirror::updateConfigWidget(nlohmann::json widgetConfig)
 {
     bool found = false;
 
-    std::cout << "widgetConfig: " << widgetConfig.dump(4) << std::endl;
-
     if (config["widgets"].size() > 0)
     {
-        std::cout << "existing config: " << config["widgets"].dump(4) << std::endl;
         for (nlohmann::json& exist : config["widgets"])
         {
-            std::cout << "name: " << exist["name"].get<std::string>() << std::endl;
+            std::string existing_name = exist["name"].get<std::string>();
+            std::string name_to_add = widgetConfig["name"].get<std::string>();
 
-        std::string existing_name = exist["name"].get<std::string>();
-        std::string name_to_add = widgetConfig["name"].get<std::string>();
-
-
-        if (existing_name == name_to_add)
-        {
-            found = true;
-            exist = widgetConfig;
-        }
+            if (existing_name == name_to_add)
+            {
+                found = true;
+                exist = widgetConfig;
+            }
         }
     }
 
@@ -324,18 +346,46 @@ void Mirror::updateConfigWidget(nlohmann::json widgetConfig)
     if (!found)
         config["widgets"].push_back(widgetConfig);
 
-    std::cout << "size now: " << config["widgets"].size() << std::endl;
-
 }
 
 void Mirror::listChosenWidgets()
 {
-    std::cout << "Widgets chosen for " << data["name"] << ":" << std::endl;
+    std::cout << "Widgets chosen for " << data["name"] << ":\n\t";
+    std::cout << Common::join(getChosenWidgets(), "\n\t");
+    std::cout << std::endl << std::endl;
+}
+
+std::vector<std::string> Mirror::getChosenWidgets()
+{
+    std::vector<std::string> chosenWidgets;
     for (auto& chosenWidget : config["widgets"])
     {
-        std::cout << "\t" << chosenWidget["name"].get<std::string>() << std::endl;
+        chosenWidgets.push_back(chosenWidget["name"].get<std::string>());
     }
-    std::cout << std::endl;
+
+    return chosenWidgets;
+}
+
+std::vector<std::string> Mirror::getAvailableWidgets()
+{
+    std::vector<std::string> availableWidgets = {};
+
+    for(std::string widgetName : allWidgets)
+    {
+        std::vector<std::string> chosenWidgets = getChosenWidgets();
+        if (std::find(chosenWidgets.begin(), chosenWidgets.end(), widgetName) == chosenWidgets.end())
+            availableWidgets.push_back(widgetName);
+    }
+
+    return availableWidgets;
+}
+
+bool Mirror::widgetIsConfigured(std::string widgetName)
+{
+    std::vector<std::string> chosenWidgets = getChosenWidgets();
+    if (std::find(chosenWidgets.begin(), chosenWidgets.end(), widgetName) != chosenWidgets.end())
+        return true;
+    return false;
 }
 
 
@@ -351,8 +401,8 @@ void Mirror::changeName()
 
 void Mirror::clearCin()
 {
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::cin.clear();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
 void Mirror::exitMirror()
@@ -387,9 +437,9 @@ void Mirror::publishData()
             "                $scope.name = data[\"name\"];\n"
             "                $scope.widgets = data[\"widgets\"];\n"
             "                $scope.date = function() {return new Date() };\n"
-            "                $interval(function(){\n"
-            "                     document.location.reload()\n"
-            "                 }, 1000);\n"
+            "//                $interval(function(){\n"
+            "//                    document.location.reload()\n"
+            "//                }, 1000);\n"
             "            });\n"
             "        })()\n"
             "    </script>\n"
@@ -398,7 +448,6 @@ void Mirror::publishData()
             "            font-family: Helvetica, Arial, sans-serif;\n"
             "            background-color: black;\n"
             "            color: white;\n"
-            "            text-transform: capitalize;\n"
             "        }\n"
             "        div > div{\n"
             "            margin-left: 10px;\n"
@@ -412,9 +461,8 @@ void Mirror::publishData()
             "            margin: 20px;\n"
             "            width: 35%;\n"
             "            max-width: 35%;\n"
-            "            height: 250px;\n"
+            "            min-height: 250px;\n"
             "            color: white;\n"
-            "            background-color: #171819;\n"
             "            float: left;\n"
             "        }\n"
             "        .widget:nth-child(even){\n"
@@ -424,35 +472,74 @@ void Mirror::publishData()
             "            margin-bottom: 2px;\n"
             "            margin-top: 2px;\n"
             "        }\n"
+            "        blockquote small {\n"
+            "            float: right;\n"
+            "        }\n"
+            "        .theater-info{\n"
+            "            margin-left: 25px;\n"
+            "        }\n"
+            "        .movie{\n"
+            "            margin-top: 10px;\n"
+            "            margin-bottom: 5px;\n"
+            "        }\n"
             "    </style>\n"
             "</head>\n"
             "<body ng-controller=\"MirrorCtrl\">\n"
-            "    <h1>Hello {{name}}</h1>\n"
+            "<h1>Hello {{name}}</h1>\n"
             "<div class=\"widget\" ng-repeat=\"widget in widgets\">\n"
-            "    <h2 ng-bind=\"widget.name\"></h2>\n"
             "    <div ng-if=\"widget.name == 'Time'\">\n"
             "        <script> date = new Date()</script>\n"
             "        <div>{{ date() | date:''}}</div>\n"
             "        <div>{{ date() | date:'h:mm a' }}</div>\n"
             "    </div>\n"
+            "    <!---->\n"
+            "    <!--WEATHER-->\n"
+            "    <!---->\n"
+            "    <h2 ng-if=\"widget.name == 'Weather'\">Weather</h2>\n"
             "    <div ng-if=\"widget.name == 'Weather'\">\n"
             "        <div>\n"
             "            <h3 ng-bind=\"widget.data.city\"></h3>\n"
-            "            <div>{{widget.data.description}} - {{widget.data.temp}}&deg; F</div>\n"
+            "            <div>Current conditions: {{widget.data.description}} - {{widget.data.temp}}&deg; F</div>\n"
             "        </div>\n"
             "    </div>\n"
+            "    <!---->\n"
+            "    <!--QUOTE-->\n"
+            "    <!---->\n"
+            "\n"
+            "    <h2 ng-if=\"widget.name == 'QuoteOfTheDay'\">Quote of the day</h2>\n"
+            "    <div ng-if=\"widget.name == 'QuoteOfTheDay'\">\n"
+            "        <div>\n"
+            "            <blockquote>\n"
+            "                <div><em>{{widget.data.quote}}</em></div>\n"
+            "                <small>-{{widget.data.author}}</small>\n"
+            "            </blockquote>\n"
+            "        </div>\n"
+            "    </div>\n"
+            "    <!---->\n"
+            "    <!--STOCKS-->\n"
+            "    <!---->\n"
+            "\n"
             "    <div ng-if=\"widget.name == 'Stocks'\">\n"
             "        <div ng-repeat=\"stock in widget.data\">\n"
             "            <h3 ng-bind=\"stock.label\"></h3>\n"
             "            <div>${{stock.data}}</div>\n"
             "        </div>\n"
             "    </div>\n"
-            "    <div ng-if=\"widget.name == 'Movies'\">\n"
-            "        <div ng-repeat=\"location in widget.data\">\n"
-            "            <h3 ng-bind=\"location.label\"></h3>\n"
-            "            <div ng-repeat=\"movie in location.data\">\n"
-            "                <h4>{{movie.label}}</h4>\n"
-            "                <span ng-repeat=\"time in movie.data\">{{time}}</span>\n"
+            "    <!---->\n"
+            "    <!--MOVIE-->\n"
+            "    <!---->\n"
+            "\n"
+            "    <h2 ng-if=\"widget.name == 'Movie'\">Movie Listings</h2>\n"
+            "    <div ng-if=\"widget.name == 'Movie'\">\n"
+            "        <div class=\"movie\" ng-repeat=\"movie in widget.data\">\n"
+            "            <h3 ng-bind=\"movie.title\"></h3>\n"
+            "            <div class=\"movie-info\">\n"
+            "                <span ng-if=\"movie.rating\">Rated: {{movie.rating}}</span>\n"
+            "                <span ng-if=\"movie.runTime\">Runtime: {{movie.runTime}}</span>\n"
+            "            </div>\n"
+            "            <div class=\"theater-info\" ng-repeat=\"(theater, showtimes) in movie.showtimes\">\n"
+            "                <h4>{{theater}}</h4>\n"
+            "                <div ng-if=\"!showtimes.empty()\">Showtimes: {{showtimes.join(\", \")}}</div>\n"
             "            </div>\n"
             "        </div>\n"
             "    </div>\n"
