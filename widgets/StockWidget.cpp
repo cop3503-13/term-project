@@ -107,7 +107,6 @@ nlohmann::json StockWidget::transformResponse(nlohmann::json response)
 {
 
     date = Date::getISO8601("date");
-    std::cout << response["Time Series (Daily)"].dump(4);
     nlohmann::json j = response["Time Series (Daily)"];
 
     std::string closePrice;
