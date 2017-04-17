@@ -82,7 +82,7 @@ void Mirror::run()
             if (running != 2){
                 for(int i = 0; i < 100; ++i)
                     std::cout << " \n";
-                std::cout << "Running mirror... press any key to continue";
+                std::cout << "Running mirror... press enter to continue";
                 running++;
             }
 
