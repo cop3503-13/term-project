@@ -5,6 +5,7 @@
 #include "widgets/StockWidget.h"
 #include "widgets/NewsWidget.h"
 #include "widgets/QuoteOfTheDayWidget.h"
+#include "widgets/SportsWidget.h"
 #include <limits>
 #include <fstream>
 #include <iostream>
@@ -46,6 +47,11 @@ Mirror::Mirror(std::string configFileName)
             if (name == "News")
             {
                 widget = new NewsWidget(existingWidgetConf["configuration"]);
+                selectedWidgets.push_back(widget);
+            }
+            if (name == "Sports")
+            {
+                widget = new SportsWidget(existingWidgetConf["configuration"]);
                 selectedWidgets.push_back(widget);
             }
             if (name == "Stock")
@@ -307,6 +313,10 @@ void Mirror::addWidget(std::string widgetName)
     {
         widget = new WeatherWidget();
     }
+    if (widgetName == "Sports")
+    {
+        widget = new SportsWidget();
+    }
     else if (widgetName == "Stock")
     {
         widget = new StockWidget();
@@ -465,9 +475,9 @@ void Mirror::publishData()
             "                $scope.name = data[\"name\"];\n"
             "                $scope.widgets = data[\"widgets\"];\n"
             "                $scope.date = function() {return new Date() };\n"
-            "//                $interval(function(){\n"
-            "//                    document.location.reload()\n"
-            "//                }, 1000);\n"
+            "                $interval(function(){\n"
+            "                    document.location.reload()\n"
+            "                }, 1000);\n"
             "            });\n"
             "        })()\n"
             "    </script>\n"
@@ -500,15 +510,21 @@ void Mirror::publishData()
             "            margin-bottom: 2px;\n"
             "            margin-top: 2px;\n"
             "        }\n"
-            "        blockquote small {\n"
+            "        .author {\n"
             "            float: right;\n"
+            "        }\n"
+            "        .news-author {\n"
+            "            margin-left: 10px;\n"
             "        }\n"
             "        .theater-info{\n"
             "            margin-left: 25px;\n"
             "        }\n"
-            "        .movie{\n"
+            "        .section{\n"
             "            margin-top: 10px;\n"
             "            margin-bottom: 5px;\n"
+            "        }\n"
+            "        .news-type{\n"
+            "            text-transform: capitalize;\n"
             "        }\n"
             "    </style>\n"
             "</head>\n"
@@ -539,7 +555,7 @@ void Mirror::publishData()
             "        <div>\n"
             "            <blockquote>\n"
             "                <div><em>{{widget.data.quote}}</em></div>\n"
-            "                <small>-{{widget.data.author}}</small>\n"
+            "                <small class=\"author\">-{{widget.data.author}}</small>\n"
             "            </blockquote>\n"
             "        </div>\n"
             "    </div>\n"
@@ -553,13 +569,45 @@ void Mirror::publishData()
             "            <div>${{stock.data}}</div>\n"
             "        </div>\n"
             "    </div>\n"
+            "\n"
+            "    <!---->\n"
+            "    <!--Sports-->\n"
+            "    <!---->\n"
+            "\n"
+            "    <h2 ng-if=\"widget.name == 'Sports'\">Sports TV Listings</h2>\n"
+            "    <div ng-if=\"widget.name == 'Sports'\">\n"
+            "        <div class=\"section\" ng-repeat=\"event in widget.data\">\n"
+            "            <h3 ng-bind=\"event.title\"></h3>\n"
+            "            <h4 ng-bind=\"event.eventTitle\"></h4>\n"
+            "            <div ng-if=\"!event.channels.empty()\">Channels: {{event.channels.join(\", \")}}</div>\n"
+            "        </div>\n"
+            "    </div>\n"
+            "\n"
+            "\n"
+            "    <!---->\n"
+            "    <!--News-->\n"
+            "    <!---->\n"
+            "\n"
+            "    <h2 ng-if=\"widget.name == 'News'\">News</h2>\n"
+            "    <div ng-if=\"widget.name == 'News'\">\n"
+            "        <div class=\"section\" ng-repeat=\"(newsType, headlines) in widget.data.news\">\n"
+            "            <h3 class=\"news-type\" ng-bind=\"newsType\"></h3>\n"
+            "            <div ng-repeat=\"headline in headlines\">\n"
+            "                <h4 ng-bind=\"headline.title\"></h4>\n"
+            "                <small class=\"news-author\">{{headline.byline}}</small>\n"
+            "                <blockquote><div><em>{{headline.abstract}}</em></div></blockquote>\n"
+            "            </div>\n"
+            "        </div>\n"
+            "    </div>\n"
+            "\n"
+            "\n"
             "    <!---->\n"
             "    <!--MOVIE-->\n"
             "    <!---->\n"
             "\n"
             "    <h2 ng-if=\"widget.name == 'Movie'\">Movie Listings</h2>\n"
             "    <div ng-if=\"widget.name == 'Movie'\">\n"
-            "        <div class=\"movie\" ng-repeat=\"movie in widget.data\">\n"
+            "        <div class=\"section\" ng-repeat=\"movie in widget.data\">\n"
             "            <h3 ng-bind=\"movie.title\"></h3>\n"
             "            <div class=\"movie-info\">\n"
             "                <span ng-if=\"movie.rating\">Rated: {{movie.rating}}</span>\n"
