@@ -327,11 +327,8 @@ void Mirror::updateConfigWidget(nlohmann::json widgetConfig)
 {
     bool found = false;
 
-    std::cout << "widgetConfig: " << widgetConfig.dump(4) << std::endl;
-
     if (config["widgets"].size() > 0)
     {
-        std::cout << "existing config: " << config["widgets"].dump(4) << std::endl;
         for (nlohmann::json& exist : config["widgets"])
         {
             std::string existing_name = exist["name"].get<std::string>();

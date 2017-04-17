@@ -14,7 +14,7 @@ QuoteOfTheDayWidget::QuoteOfTheDayWidget() : Widget(QODWIDGET_NAME) {
     baseUrl = "http://quotes.rest/qod.json";
 
     time_t rfreshInterval = 24 * 60 * 60;        // overriding default refresh interval of 10 minutes to 24 hours
-    this->setRefreshInterval(rfreshInterval);
+    setRefreshInterval(rfreshInterval);
 //    time_t lstRefreshed = 0;
 //    this->setLastRefreshed(lstRefreshed);
 //    conf = this->getConfigurationJson();
