@@ -259,9 +259,9 @@ void Mirror::removeWidget(std::string widgetName)
     for (size_t i = 0; i < selectedWidgets.size(); ++i)
     {
         Widget* w = selectedWidgets[i];
+        w->setLastRefreshed(0);
         if (w->getName() == widgetName)
             selectedWidgets.erase(selectedWidgets.begin() + i);
-        w->setLastRefreshed(0);
     }
 
     std::cout << "\nRemaining widgets: \n";
