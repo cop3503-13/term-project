@@ -137,10 +137,13 @@ void QuoteOfTheDayWidget::config() {  // this is the part that prompts the user 
         std::cout << "You have selected the " << quoteOptionTypePrompt << " type for the quote of the day" << std::endl;
         std::cout << "Would you like to keep this selection? <Y or N> ";
         std::getline(std::cin, userInput);
-
-        if (!(userInput == "n" || userInput == "N")) {
-            userDone = true;
+        while (userInput != "n" && userInput != "N" && userInput != "no" && userInput != "No" && userInput != "NO")
+        {
+            std::cout << "Wrong answer\n\nWould you like to keep this selection? <Y or N> ";
+            std::getline(std::cin, userInput);
         }
+            userDone = true;
+
     }
 
     conf["quoteOptionType"] = quoteOptionType;
