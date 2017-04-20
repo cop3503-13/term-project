@@ -221,4 +221,3 @@ nlohmann::json QuoteOfTheDayWidget::transformResponse(nlohmann::json response) {
 
     return data;
 };
-0
