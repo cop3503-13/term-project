@@ -137,12 +137,17 @@ void QuoteOfTheDayWidget::config() {  // this is the part that prompts the user 
         std::cout << "You have selected the " << quoteOptionTypePrompt << " type for the quote of the day" << std::endl;
         std::cout << "Would you like to keep this selection? <Y or N> ";
         std::getline(std::cin, userInput);
-        while (userInput != "n" && userInput != "N" && userInput != "no" && userInput != "No" && userInput != "NO")
+        bool noInput = userInput == "n" || userInput == "N" || userInput == "no" || userInput == "No" || userInput == "NO";
+        bool yesInput = userInput == "y" || userInput == "Y" || userInput == "yes" || userInput == "Yes" || userInput == "YES";
+
+        while (!noInput && !yesInput)
         {
             std::cout << "Wrong answer\n\nWould you like to keep this selection? <Y or N> ";
             std::getline(std::cin, userInput);
+            noInput = userInput == "n" || userInput == "N" || userInput == "no" || userInput == "No" || userInput == "NO";
+            yesInput = userInput == "y" || userInput == "Y" || userInput == "yes" || userInput == "Yes" || userInput == "YES";
         }
-            userDone = true;
+        userDone = true;
 
     }
 
@@ -216,3 +221,4 @@ nlohmann::json QuoteOfTheDayWidget::transformResponse(nlohmann::json response) {
 
     return data;
 };
+0
