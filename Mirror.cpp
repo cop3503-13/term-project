@@ -74,6 +74,16 @@ Mirror::Mirror(std::string configFileName)
                     widget = new QuoteOfTheDayWidget(existingWidgetConf["configuration"]);
                     selectedWidgets.push_back(widget);
                 }
+                if (Common::contains(allWidgets, name))
+                {
+                    nlohmann::json widgetConfig = {
+                            {"name", name },
+                            {"configuration", widget->getConfJSON()}
+                    };
+                    updateConfigWidget(widgetConfig);
+                    publishConfig();
+                }
+
             }
         }
         else
@@ -82,14 +92,8 @@ Mirror::Mirror(std::string configFileName)
         }
 
     }
-    catch (nlohmann::detail::parse_error& e)
-    {
-        validFile = false;
-    }
-    catch (nlohmann::detail::type_error& e)
-    {
-        validFile = false;
-    }
+    catch (nlohmann::detail::parse_error& e) { validFile = false; }
+    catch (nlohmann::detail::type_error& e)  { validFile = false; }
 
     if (!validFile)
     {
@@ -119,7 +123,7 @@ void Mirror::run()
             if (running != 2){
                 for(int i = 0; i < 100; ++i)
                     std::cout << " \n";
-                std::cout << "Running mirror... press enter to continue";
+                std::cout << "Running mirror... press enter to make changes or exit\n\n";
                 fflush(stdout);  //flush sdout so keyboard hit will work correctly
                 running++;
             }
@@ -142,7 +146,31 @@ void Mirror::run()
 
 void Mirror::refreshWidget(Widget* widget, bool run)
 {
-    std::string refreshed = widget->refresh();
+    std::string refreshed = "";
+    bool validWidget;
+    try
+    {
+        refreshed = widget->refresh();
+        validWidget = true;
+    }
+    catch (nlohmann::json::out_of_range& e){ validWidget = false; }
+    catch (nlohmann::detail::type_error& e){ validWidget = false; }
+
+    if (!validWidget)
+    {
+        std::cout << "\n\n\nInvalid configuration detected, please reconfigure.\n";
+        std::cout << "Configuring " + widget->getName() + " widget...\n\n";
+        widget->config();
+        refreshed = widget->refresh();
+        nlohmann::json widgetConfig = {
+                {"name", name },
+                {"configuration", widget->getConfJSON()}
+        };
+        updateConfigWidget(widgetConfig);
+        publishConfig();
+        std::cout << "\nReconfiguration of " + widget->getName() + " widget complete, refreshing data and running mirror...\n\n";
+    }
+
     if (refreshed != "") {
         nlohmann::json data_json = {{"name", widget->getName()},
                                     {"data", nlohmann::json::parse(refreshed)}};
@@ -769,7 +797,7 @@ void Mirror::openBrowser(const std::string& filename)
         webfile_open = true;
         std::cout << "\nOpening browser... Please wait \n\n\n";
         fflush(stdout); //flush stdout so keyboard hit will work
-        sleep(2);
+        sleep(3);
     }
 }
 

@@ -49,5 +49,9 @@ time_t Widget::getRefreshInterval()
 
 void Widget::setRefreshInterval(const time_t interval)
 {
-    refreshInterval = interval;
+    if (interval < 5)
+        refreshInterval = 30; //30 seconds
+    else
+        refreshInterval = interval;
+    conf["refreshInterval"] = getRefreshInterval();
 }

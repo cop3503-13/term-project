@@ -44,7 +44,22 @@ WeatherWidget::WeatherWidget(std::string config) : Widget(WEATHERWIDGET_NAME)
  */
 WeatherWidget::WeatherWidget(nlohmann::json config) : Widget(WEATHERWIDGET_NAME)
 {
-    conf = config;
+    bool success;
+    try
+    {
+        std::string zip = config["zip"];
+        setZipCode(zip);
+        setRefreshInterval(config["refreshInterval"]);
+        success = true;
+    }
+    catch (nlohmann::json::out_of_range& e){ success = false; }
+    catch (nlohmann::detail::type_error& e){ success = false; }
+
+    if (!success)
+    {
+        this->config();
+        setRefreshInterval(600);
+    }
 }
 
 
@@ -62,17 +77,10 @@ WeatherWidget::WeatherWidget(nlohmann::json config) : Widget(WEATHERWIDGET_NAME)
 void WeatherWidget::config()
 {
     std::string zip = "";
-    std::cout << "Please config the Weather Widget." << std::endl;
+    std::cout << "Please configure the Weather Widget." << std::endl;
     std::cout << "What is your zipcode?" << std::endl;
     std::cout << "Zipcode: ";
     std::getline(std::cin, zip);
-    while (!validZipCode(zip))
-    {
-        std::cout << "What is your zipcode?" << std::endl;
-        std::cout << "Zipcode: ";
-        std::getline(std::cin, zip);
-    }
-
     setZipCode(zip);
     conf = {
             {"zip", getZipCode()},
@@ -166,6 +174,13 @@ std::string WeatherWidget::getZipCode()
 
 void WeatherWidget::setZipCode(std::string zip)
 {
+    while (!validZipCode(zip))
+    {
+        std::cout << "What is your zipcode?" << std::endl;
+        std::cout << "Zipcode: ";
+        std::getline(std::cin, zip);
+    }
+
     zipcode = zip;
     conf["zip"] = zip;
 }
