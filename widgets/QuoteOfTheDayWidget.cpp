@@ -180,7 +180,7 @@ nlohmann::json QuoteOfTheDayWidget::refreshData() {
 
 }
 
-std::string QuoteOfTheDayWidget::QuoteOfTheDayWidget::getQuote() {
+std::string QuoteOfTheDayWidget::getQuote() {
     return quote;
 }
 
