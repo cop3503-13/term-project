@@ -30,7 +30,6 @@ private:
     nlohmann::json transformResponse(nlohmann::json response);
     std::string getDailyUrl(std::string zip);
     std::string get5dayUrl(std::string zip);
-    void configureZipCode();
     bool validZipCode(std::string zip);
 
 };

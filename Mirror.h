@@ -83,12 +83,18 @@ private:
      * on the system
      *
      */
-    void publishData();
+     //returns filename
+    std::string publishData();
 
     void publishConfig();
 
     void updateDataWidget(nlohmann::json widgetData);
     void updateConfigWidget(nlohmann::json widgetConfig);
+
+    void refreshWidget(Widget* widget, bool run = true);
+
+    //opens the browser to display the mirror
+    void openBrowser(const std::string& filename);
 
 
     /**********************
@@ -98,6 +104,8 @@ private:
      */
     std::vector<std::string> getChosenWidgets();
     std::vector<std::string> getAvailableWidgets();
+
+    int numOfConfiguredWidgets();
 
 
     bool widgetIsConfigured(std::string widgetName);

@@ -29,52 +29,81 @@ Mirror::Mirror()
 Mirror::Mirror(std::string configFileName)
 {
     nlohmann::json conf;
+    bool validFile;
     std::ifstream str(configFileName);
-    str >> conf;
-    config = conf;
-    data["name"] = config["name"];
-    if (config["widgets"].size() > 0)
+    try
     {
-        for (nlohmann::json& existingWidgetConf : config["widgets"])
+        validFile = true;
+        str >> conf;
+        config = conf;
+        data["name"] = config["name"];
+
+        if (numOfConfiguredWidgets() > 0)
         {
-            Widget* widget;
-            std::string name = existingWidgetConf["name"].get<std::string>();
-            if (name == "Weather")
+            for (nlohmann::json& existingWidgetConf : config["widgets"])
             {
-                widget = new WeatherWidget(existingWidgetConf["configuration"]);
-                selectedWidgets.push_back(widget);
-            }
-            if (name == "News")
-            {
-                widget = new NewsWidget(existingWidgetConf["configuration"]);
-                selectedWidgets.push_back(widget);
-            }
-            if (name == "Sports")
-            {
-                widget = new SportsWidget(existingWidgetConf["configuration"]);
-                selectedWidgets.push_back(widget);
-            }
-            if (name == "Stock")
-            {
-                widget = new StockWidget(existingWidgetConf["configuration"]);
-                selectedWidgets.push_back(widget);
-            }
-            if (name == "Movie")
-            {
-                widget = new MovieWidget(existingWidgetConf["configuration"]);
-                selectedWidgets.push_back(widget);
-            }
-            if (name == "QuoteOfTheDay")
-            {
-                widget = new QuoteOfTheDayWidget(existingWidgetConf["configuration"]);
-                selectedWidgets.push_back(widget);
+                Widget* widget;
+                std::string name = existingWidgetConf["name"].get<std::string>();
+                if (name == "Weather")
+                {
+                    widget = new WeatherWidget(existingWidgetConf["configuration"]);
+                    selectedWidgets.push_back(widget);
+                }
+                if (name == "News")
+                {
+                    widget = new NewsWidget(existingWidgetConf["configuration"]);
+                    selectedWidgets.push_back(widget);
+                }
+                if (name == "Sports")
+                {
+                    widget = new SportsWidget(existingWidgetConf["configuration"]);
+                    selectedWidgets.push_back(widget);
+                }
+                if (name == "Stock")
+                {
+                    widget = new StockWidget(existingWidgetConf["configuration"]);
+                    selectedWidgets.push_back(widget);
+                }
+                if (name == "Movie")
+                {
+                    widget = new MovieWidget(existingWidgetConf["configuration"]);
+                    selectedWidgets.push_back(widget);
+                }
+                if (name == "QuoteOfTheDay")
+                {
+                    widget = new QuoteOfTheDayWidget(existingWidgetConf["configuration"]);
+                    selectedWidgets.push_back(widget);
+                }
+                if (Common::contains(allWidgets, name))
+                {
+                    nlohmann::json widgetConfig = {
+                            {"name", name },
+                            {"configuration", widget->getConfJSON()}
+                    };
+                    updateConfigWidget(widgetConfig);
+                    publishConfig();
+                }
+
             }
         }
+        else
+        {
+            configure();
+        }
+
     }
-    else
+    catch (nlohmann::detail::parse_error& e) { validFile = false; }
+    catch (nlohmann::detail::type_error& e)  { validFile = false; }
+
+    if (!validFile)
     {
+        selectedWidgets.clear();
+        config.clear();
+        data.clear();
         configure();
     }
+
+
 };
 
 Mirror::~Mirror()
@@ -94,20 +123,15 @@ void Mirror::run()
             if (running != 2){
                 for(int i = 0; i < 100; ++i)
                     std::cout << " \n";
-                std::cout << "Running mirror... press enter to continue";
+                std::cout << "Running mirror... press enter to make changes or exit\n\n";
+                fflush(stdout);  //flush sdout so keyboard hit will work correctly
                 running++;
             }
 
             for(size_t i = 0; i < selectedWidgets.size(); ++i)
             {
                 Widget* widget = selectedWidgets[i];
-                std::string refreshed = widget->refresh();
-                if (refreshed != "")
-                {
-                    nlohmann::json data_json = {{"name", widget->getName()}, {"data", nlohmann::json::parse(refreshed)}};
-                    updateDataWidget(data_json);
-                    publishData();
-                }
+                refreshWidget(widget);
             }
         }
         else
@@ -120,10 +144,59 @@ void Mirror::run()
 
 }
 
+void Mirror::refreshWidget(Widget* widget, bool run)
+{
+    std::string refreshed = "";
+    bool validWidget;
+    try
+    {
+        refreshed = widget->refresh();
+        validWidget = true;
+    }
+    catch (nlohmann::json::out_of_range& e){ validWidget = false; }
+    catch (nlohmann::detail::type_error& e){ validWidget = false; }
 
-void Mirror::configure() {
-    std::string name = config["name"].get<std::string>();
-    if (name != "")
+    if (!validWidget)
+    {
+        std::cout << "\n\n\nInvalid configuration detected, please reconfigure.\n";
+        std::cout << "Configuring " + widget->getName() + " widget...\n\n";
+        widget->config();
+        refreshed = widget->refresh();
+        nlohmann::json widgetConfig = {
+                {"name", name },
+                {"configuration", widget->getConfJSON()}
+        };
+        updateConfigWidget(widgetConfig);
+        publishConfig();
+        std::cout << "\nReconfiguration of " + widget->getName() + " widget complete, refreshing data and running mirror...\n\n";
+    }
+
+    if (refreshed != "") {
+        nlohmann::json data_json = {{"name", widget->getName()},
+                                    {"data", nlohmann::json::parse(refreshed)}};
+        updateDataWidget(data_json);
+
+        if (run)
+            openBrowser(publishData());
+        else
+            publishData();
+    }
+    else
+    {
+        if (run && !webfile_open)
+            openBrowser(publishData());
+    }
+}
+
+
+void Mirror::configure()
+{
+    bool hasName;
+    try { hasName = config["name"].get<std::string>() != "";  }
+    catch (nlohmann::json::out_of_range& e){ hasName = false; }
+    catch (nlohmann::detail::type_error& e){ hasName = false; }
+
+    if (hasName)
     {
         std::cout << "Hello " + name + ", welcome to your Magic Mirror. \n";
     }
@@ -189,7 +262,8 @@ int Mirror::displayMainOptions()
     std::string message = "What would you like to do? \n";
     message += "\t 1: Add a widget to your mirror \n";
     message += "\t 2: Change name\n";
-    if (config["widgets"].size() > 0)
+    int numOfWidgets = numOfConfiguredWidgets();
+    if (numOfWidgets > 0)
     {
         message += "\t 3: List your chosen widgets\n";
         message += "\t 4: Remove a chosen widget\n\n";
@@ -204,7 +278,13 @@ int Mirror::displayMainOptions()
     int choice;
     std::cin >> dchoice;
     choice = (int)dchoice;
-    while (std::cin.fail() || (!std::cin.eof() && std::cin.peek() != 10) || choice < 1 || choice > 6 || choice != dchoice)
+    //if there are 0 widgets then choice is only 1 2 or 6
+    bool invalidChoice = numOfWidgets > 0 ? (choice < 1 || choice > 6) : !(choice == 1 || choice == 2 || choice == 6);
+
+    while (std::cin.fail()
+           || (!std::cin.eof() && std::cin.peek() != 10)
+           || choice != dchoice
+           || invalidChoice )
     {
         std::cout << "Error you must make a valid choice\n";
         std::cout << message;
@@ -214,6 +294,7 @@ int Mirror::displayMainOptions()
         choice = (int)dchoice;
     }
 
+    std::cout << std::endl;
     return choice;
 }
 
@@ -353,6 +434,9 @@ void Mirror::addWidget(std::string widgetName)
     nlohmann::json configuration = {{"name", widget->getName()}, {"configuration", widget->getConfJSON()}};
 
     updateConfigWidget(configuration);
+    publishConfig();
+    refreshWidget(widget, false);
+    publishData();
 }
 
 
@@ -437,6 +521,20 @@ std::vector<std::string> Mirror::getAvailableWidgets()
     return availableWidgets;
 }
 
+int Mirror::numOfConfiguredWidgets()
+{
+    try
+    {
+        config.at("widgets");
+    }
+    catch (nlohmann::json::out_of_range& e)
+    {
+        return 0;
+    }
+
+    return config["widgets"].size();
+}
+
 bool Mirror::widgetIsConfigured(std::string widgetName)
 {
     std::vector<std::string> chosenWidgets = getChosenWidgets();
@@ -473,7 +571,7 @@ void Mirror::exitMirror()
  * on the system
  *
  */
-void Mirror::publishData()
+std::string Mirror::publishData()
 {
     const char* begin_html = "<!doclabel html>\n"
             "<html ng-app=\"App\" >\n"
@@ -687,13 +785,19 @@ void Mirror::publishData()
     html_file << data.dump(4);
     html_file << end_html;
     html_file.close();
+    return filename;
+}
+
+void Mirror::openBrowser(const std::string& filename)
+{
     if (!webfile_open)
     {
         std::string command = "xdg-open " + filename + " &";
         system(command.c_str());
         webfile_open = true;
         std::cout << "\nOpening browser... Please wait \n\n\n";
-        sleep(2);
+        fflush(stdout); //flush stdout so keyboard hit will work
+        sleep(3);
     }
 }
 
